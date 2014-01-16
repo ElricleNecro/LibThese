@@ -1,0 +1,841 @@
+# -*- encoding: utf-8 -*-
+
+import os
+import subprocess	          as sb
+import numpy                      as np
+import matplotlib.pyplot          as plt
+import LibPerso.ListDir.directory as dir
+
+from   shlex		               import split
+from   LibThese.plot                   import Read_File
+from   numpy                           import pi
+from   matplotlib.backends.backend_pdf import PdfPages
+
+
+"""
+Module de gestion des données de simulation.
+
+Ce module contient un set de fonction permettant d'analyser, de calculer et de tracer des données physique de simulation Gadget2 (format de fichier Gadget-1 ou Gadget-2)
+"""
+
+TParam = dict()
+TParam["p_ratio"] = 0
+TParam["g_ratio"] = 1
+TParam["Viriel"] = 2
+TParam["Tmoy"] = 3
+TParam["Aniso"] = 4
+
+p2m = 3.086e16
+
+valexec = "valgrind --tool=memcheck --num-callers=40 --leak-check=full --track-origins=yes --show-reachable=yes ./../../Verif"
+
+def exec_list(motif, G=6.67e-11, Rmax=2.92668e+17, rsoft=0.0790899, nbbin=100, vexec="Verif", periodic=False, filetheo="King_dim.log", fileparam="ci_param.dat", exclude=None, retour=False, video=False, tmax=0.1, UT=9.77894e8, Td=8.02191e6, opang=0.0):
+	"""
+	Cette fonction appelle la fonction load.launch sur tous les fichiers contenant la chaîne motif, les tracent dans un fichier pdf du même nom que le snapshot
+	et stock les données dans un dictionnaire.
+
+	Paramètres obligatoires :
+	motif :: Motif permettant la recherche de fichier snapshot.
+
+	Paramétre optionnel :
+	G        = 6.67e-11        :: Valeur de la constante de la gravitation dans le système d'unité du snapshot.
+	Rmax     = 2.92668e+17     :: Rayon au-delà duquel les particules sont ignorés.
+	rsoft    = 0.0790899       :: Paramètre de lissage à utiliser lors du calcul du potentiel, en parsec.
+	nbbin    = 100             :: Nombre de bin à utiliser pour les quantités nécessitant des histogrammes (fonction de distribution, densité, jacobien, ...).
+	vexec    = "Verif"         :: Chemin vers l'exécutable du programme.
+	filetheo = "King_dim.log"  :: Fichier contenant les données théoriques au format du programme de conditions initiales. Mettre à None s'il n'y a aucun fichier à lire.
+	exclude  = None		   :: Expression régulière/motif correspondant aux fichiers à exclure du traitement.
+	retour   = False           :: Retourner les tableaux de données de chaque fichiers ?
+	video    = False           :: Enregistrement des cartes au format png dans le but d'en faire une vidéo.
+
+	Valeur de retour :
+	si retour vaut True :
+		Liste contenant les noms de fichier exécuté.
+		Dictionnaire contenant résultat de chaque simulation.
+	sinon :
+		Rien du tout.
+	"""
+	if os.path.isfile(motif):
+		liste = [motif]
+	else:
+		liste = dir.SearchFile(motif, exclude=exclude)
+		liste.sort()
+	print(liste)
+
+	if retour:
+		res = dict()
+
+	for i, nm in enumerate(liste):
+#		info = " temps : %g"%( tmax * i * 9.77894e8 / (len(liste) * 8.02191e6) )
+		info = " temps : %g"%( tmax * (i+1) * UT / (len(liste) * Td) )
+		print(info)
+		if filetheo is not None:
+			Mass, Dens, Pot, Distrib, Etot, Theo = launch(nm, rsoft=rsoft, G=G, opang=opang, Rmax=Rmax, nbbin=nbbin, vexec=vexec, filetheo=filetheo, periodic=periodic)
+			plot(Dens, Pot, Distrib, data=Theo, m=Mass[0,1], prefix=nm, aff=False, save=True, fileparam=fileparam, video=video, info=info)
+			if retour:
+				res[nm] = (Mass, Dens, Pot, Distrib, Etot, Theo)
+			del Mass, Dens, Pot, Distrib, Etot, Theo
+		else:
+			Mass, Dens, Pot, Distrib, Etot = launch(nm, rsoft=rsoft, G=G, Rmax=Rmax, opang=opang, nbbin=nbbin, vexec=vexec, filetheo=filetheo, periodic=periodic)
+			del Mass, Dens, Pot, Distrib, Etot, Theo
+		else:
+			Mass, Dens, Pot, Distrib, Etot = launch(nm, rsoft=rsoft, G=G, Rmax=Rmax, opang=opang, nbbin=nbbin, vexec=vexec, filetheo=filetheo, periodic=periodic, Other=Other)
+			plot(Dens, Pot, Distrib, m=Mass[0,1], prefix=nm, aff=False, save=True, fileparam=fileparam, video=video, info=info)
+			if retour:
+				res[nm] = (Mass, Dens, Pot, Distrib, Etot)
+			del Mass, Dens, Pot, Distrib, Etot
+
+	if retour:
+		return (liste, res)
+
+def compile(path="-C ../..", args=[], vexec="make", target=""):
+	"""Compile le code.
+
+	Paramètres optionnels :
+	path  = "../.." :: chemin vers le dossier contenant le Makefile ou les sources.
+	vexec = "make"  :: nom du programme compilant le code.
+	args  = []      :: contiendras les options à passer au programme faisant la compilation.
+	"""
+	cmd = [vexec]
+	if path != None:
+		for i in split(path):
+			cmd.append(i)
+
+	if args != []:
+		for i in args:
+			cmd.append(i)
+
+	cmd.append(target)
+
+	print("Commande :", cmd)
+
+	make = sb.Popen(cmd, stdout=sb.PIPE, stderr=sb.PIPE)
+	out, err = make.communicate()
+
+	out = out.decode("utf-8").split('\n')
+	err = err.decode("utf-8").split('\n')
+
+	nb_err = 0
+
+	for lig in err:
+		if "error" in lig:
+			nb_err += 1
+			print(lig)
+
+	if nb_err == 0:
+		for lig in out:
+			if "warning" in lig:
+				print(lig)
+
+def launch(filename, G=6.67e-11, Rmax=2.92668e+17, rsoft=0.0790899, opang=0.0, nbbin=100, types=4, periodic=False, vexec="Verif", SeeErr = True, SeeOut = True, filetheo="King_dim.log", Other=""):
+	"""Lance le code. Retourne les résultats sous forme de np.array.
+
+	ATTENTION : Modification de l'interface du programme. La fonction peut arrêter de fonctionner à tout moment.
+
+	Paramètre obligatoire :
+	filename :: nom du fichier snapshot au format gadget-1 ou gadget-2
+
+	Paramètres optionnels :
+	G        = 6.67e-11        :: Valeur de la constante de la gravitation dans le système d'unité du snapshot.
+	Rmax     = 2.92668e+17     :: Rayon au-delà duquel les particules sont ignorés.
+	rsoft    = 0.0790899       :: paramètre de lissage à utiliser lors du calcul du potentiel, en parsec.
+	nbbin    = 100             :: nombre de bin à utiliser pour les quantités nécessitant des histogrammes (fonction de distribution, densité, jacobien, ...).
+	vexec    = "./../../Verif" :: chemin vers l'exécutable du programme.
+	filetheo = "King_dim.log"  :: fichier contenant les données théoriques au format :., non chargé si 'None'.
+	SeeErr   = True		   :: Voir la sortie d'erreur.
+	SeeOut   = True            :: Voir la sortie standard.
+
+	Valeurs de retour :
+	np.array contenant la fonction de masse avec le rayon.
+	np.array contenant la densité avec le rayon.
+	np.array contenant le potentiel avec le rayon.
+	np.array contenant les données théoriques du fichier filetheo.
+	np.array contenant la fonction de distribution en énergie et son jacobien (foireux => sous-estimé).
+	np.array contenant l'énergie potentiel, cinétique et totale avec le rayon.
+	"""
+
+	print("G :: %g\nRmax :: %g\nSoftening :: %g\nNbBin :: %d\n"%(G, Rmax, rsoft, nbbin))
+	#cmd = split(vexec + " " + filename + " " + str(G) + " " + str(Rmax) + " " + str(rsoft) + " " + str(nbbin))
+	#os.system(vexec + " " + filename + " " + str(G) + " " + str(Rmax) + " " + str(rsoft) + " " + str(nbbin))
+
+	#print("Commande :", cmd)
+
+	if SeeErr:
+		tmperr = None
+	else:
+		tmperr = sb.PIPE
+	if SeeOut:
+		tmpout = None
+	else:
+		tmpout = sb.PIPE
+
+	if periodic:
+		OptPer = "-p"
+	else:
+		OptPer = ""
+
+	#make = sb.Popen(cmd, stdout=tmpout, stderr=tmperr)
+#	os.system(vexec + " " + filename + " " + str(G) + " " + str(Rmax) + " " + str(rsoft) + " " + str(nbbin))
+	os.system(vexec + " " + filename + " -n " + str(nbbin) + " -s " + str(rsoft) + " -R " + str(Rmax) + " -o " + str(opang) + " -t " + str(types) + " " + OptPer + " " + Other)#+ str(G) + " " + str(Rmax) + " " + str(rsoft) + " " + str(nbbin))
+#	out, err = make.communicate()
+#
+#	out = out.decode("utf-8").split('\n')
+#	err = err.decode("utf-8").split('\n')
+
+#	print("Sortie standard :", out, sep='\n')
+#	print("Sortie d'erreur :", err, sep='\n')
+
+	Mass      = Read_File("Masse.dat")
+	Dens      = Read_File("Densite.dat")
+	Potentiel = Read_File("Potentiel-tc.dat")
+	Distrib   = Read_File("Distribution.dat")
+	Energie   = Read_File("Energie.dat")
+	if filetheo:
+		data      = Read_File(filetheo)	#("King_dim.log")
+
+	Potentiel.sort(key=lambda t: t[0])
+
+	if filetheo:
+		return (	np.array(Mass, dtype=np.float64),
+				np.array(Dens, dtype=np.float64),
+				np.array(Potentiel, dtype=np.float64),
+				np.array(Distrib, dtype=np.float64),
+				np.array(Energie, dtype=np.float64),
+				np.array(data, dtype=np.float64)
+			)
+	else:
+		return (	np.array(Mass, dtype=np.float64),
+				np.array(Dens, dtype=np.float64),
+				np.array(Potentiel, dtype=np.float64),
+				np.array(Distrib, dtype=np.float64),
+				np.array(Energie, dtype=np.float64)
+			)
+
+def BruteForce(filename, G=6.67e-11, Rmax=2.92668e+17, rsoft=0.0790899, nbbin=100, vexec="./../../BruteForce"):
+	"""Lance le code. Retourne les résultats sous forme de np.array.
+	"""
+
+	print("G :: %g\nRmax :: %g\nSoftening :: %g\nNbBin :: %d\n"%(G, Rmax, rsoft, nbbin))
+	os.system(vexec + " " + filename + " " + str(G) + " " + str(Rmax) + " " + str(rsoft) + " " + str(nbbin))
+
+	Potentiel = Read_File("Potentiel-bf.dat")
+
+	Potentiel.sort(key=lambda t: t[0])
+
+	return np.array(Potentiel, dtype=np.float64)
+
+def VConcate(a, b):
+	"""Ajoute les colonnes de b à a.
+
+	Paramètres obligatoires :
+	a :: np.array à concaténer.
+	b :: np.array à concaténer avec a.
+
+	Valeur de retour :
+	np.array contenant les tableaux concaténé.
+	"""
+	return np.vstack( (a.T, b.T) ).T
+
+def f_distribtheo(E, jac=None, El=None, rc=None, m=None, sig2=None, W0=None, rho0=None, fileparam="ci_param.dat"):
+	"""Retourne la fonction de distribution du modèle de King, 1966. Se sert des paramètres donné dans le fichier fileparam.
+	Si l'un des paramètres est donnée en utilisant les paramètres optionnels, il écrase celui donné dans le fichier.
+
+	Paramètre obligatoire :
+	E :: np.array contenant les valeurs d'énergie pour lesquelles la fonction de distribution doit être évaluée. Typiquement : les valeurs contenu dans la première colonne du np.array contenant la distribution en énergie des particules retourné par load.launch.
+
+	Paramètres optionnels :
+	jac       = None           :: np.array de même taille que E contenant le jacobien de la fonction de distribution. Typiquement : celui retourné par la fonction load.f_jacobien.
+	El        = None           :: scalaire, valeur de l'énergie de libération, énergie maximale du système.
+	rc        = None           :: scalaire, rayon de cœur tel que définit dans le modéle de King, 1966.
+	m         = None           :: scalaire, masse d'une particule.
+	sig2      = None           :: scalaire, dispersion de vitesse du système (cf : celle du catalogue de Harris).
+	W0        = None           :: scalaire, condition initiale du modèle de King adimensionné.
+	rho0      = None           :: scalaire, densité centrale.
+	fileparam = "ci_param.dat" :: chaîne de caractère, nom du fichier dans lequel lire les données principale sur le système (ie : le fichier généré par le programme de génération des conditions initiale).
+
+	Valeur de retour :
+	np.array de même taille que E contenant la fonction de distribution de King, 1966.
+	"""
+
+#	if jac != None and np.size(E) != np.size(jac):
+#		raise("Erreur : E et jac doivent être de même taille.")
+
+	param = Read_File(fileparam)
+
+	if rc == None: rc   = param[0][0]
+	if m == None: m    = param[0][1]
+	if El == None: El   = param[1][0]
+	if sig2 == None: sig2 = param[1][1]
+	if W0 == None: W0   = param[2][0]
+	if rho0 == None: rho0 = param[2][1]
+
+	print("Paramètres :\n\t(x) rc = "
+			+ str(rc) + "\n\t(x) m = "
+			+ str(m) + "\n\t(x) El = "
+			+ str(El) + "\n\t(x) sigma2 = "
+			+ str(sig2) + "\n\t(x) W0 = "
+			+ str(W0) + "\n\t(x) rho0 = "
+			+ str(rho0) + "\n")
+
+	f    = rho0 * (2.0 * pi * m * sig2)**(-3.0/2.0) * (np.exp((El - E)/sig2) - 1.0)
+	if jac == None:
+		return f
+	else:
+		return jac * f
+
+def f_jacobien(E, Pot, m):
+	"""Calcule le jacobien permettant de passer de f(x, p) à f(E) à partir du potentiel issu de la simulation/du snapshot.
+
+	Paramètres obligatoires :
+	E   :: Énergie.
+	Pot :: np.array contenant le rayon et le potentiel (cf le tableau issu de launch).
+	m   :: masse d'une particule.
+
+	Valeur de retour :
+	np.array contenant le jacobien, de même taille que E.
+	"""
+	from scipy.integrate import trapz
+	JAC = []
+	for nbE in E[:]:
+		tmp = nbE - m*Pot[:,1]
+		i = 0
+		for j in tmp:
+			i += 1
+			if j < 0.0:
+				break
+		tmp_psi = (4.0 * np.pi)**(2.0) * m * (Pot[0:i-1,0])**(2.0) * np.sqrt( 2.0*m * tmp[0:i-1]) #(nbE - m*Pot[0:i,1]))
+		JAC.append(trapz(tmp_psi, x=Pot[0:i-1,0]))
+
+	return np.array(JAC)
+
+def plotDistrib(Distrib, Pot, m, prefix="", fileparam="ci_param.dat", suppose = False, info=""):
+	"""Calcul la distribution d'énergie théorique et la distribution de la simulation,
+	puis les tracent ensemble sur le même graphe.
+
+	Paramètres obligatoires :
+	Distrib :: numpy.array contenant la distribution d'énergie sortie par le programme de Vérification (commande load.launch)
+	Pot     :: numpy.array contenant le Potentiel sortie par le programme de Vérification (commande load.launch)
+	m       :: float, masse d'une particule
+
+	Paramètres optionnels :
+	prefix    = ""             :: Préfixe de la simulation. En combinaison avec save, enregistre les graphiques dans un fichier pdf de nom prefix + ".pdf".
+	fileparam = "ci_param.dat" :: Fichier contenant certains paramètre du Modèle.
+	info      = ""             :: Quelques informations à rajouter dans le titre des graphiques.
+
+	Valeur de retour :
+	classe figure matplotlib associé au graphique.
+	"""
+
+	if fileparam != None:
+		tmpjac = f_jacobien(Distrib[:,0], Pot, m)
+		Theo   = f_distribtheo(Distrib[:,0], jac=tmpjac, El=Distrib[-1,0], fileparam=fileparam)
+
+		dE     = Distrib[1,0] - Distrib[0,0]
+		Theo   = Theo * dE / m
+
+	fig    = plt.figure(prefix + "Distribution")
+	if not suppose:
+		fig.clf()
+
+	ax1    = fig.add_subplot(111)
+
+	ax1.set_title("Distribution en énergie des particules " + info)
+	ax1.set_ylabel(r'$N_{\mathrm{Particules}}$')
+	ax1.set_xlabel(r'Énergie en Yotta-Joule ($1 YJ = 10^{24} J$)')
+
+	ax1.plot(Distrib[:,0]/1e24, Distrib[:,2], '+')
+	if fileparam != None:
+		ax1.plot(Distrib[:,0]/1e24, Theo, 'g-')
+	ax1.legend(('Distribution de la simulation', ), 'upper left', shadow=True)
+	if fileparam != None:
+		ax1.legend(('Distribution théorique', ), 'upper left', shadow=True)
+
+	return fig
+
+def plot(Dens, Pot, Distrib, data=None, m=1.42478e+29, prefix="", aff=True, save=False, fileparam="ci_param.dat", filesave=("Densite.pdf", "Potentiel.pdf", "Anisotropie.pdf", "Temperature.pdf", "Distribution.pdf"), suppose=False, video=False, info="", nbbin=300, BoxSize=180.12*p2m, center=0.0):
+	"""Trace les différentes observables des simulations d'évolution d'amas globulaire faîtes à l'aide de Gadget-2, lors de la thèse de Guillaume Plum.
+	Tracé de :
+		(1) la densité contre le rayon,
+		(2) le potentiel contre le rayon,
+		(3) l'anisotropie du système contre le rayon,
+		(4) la température du système contre le rayon,
+		(5) la distribution en énergie du système.
+
+	Paramètres obligatoires :
+	Dens    :: np.array contenant la densité, sortie de la fonction load.launch.
+	Pot     :: np.array contenant le potentiel, sortie de la fonction load.launch.
+	Distrib :: np.array contenant la distribution en énergie des particules dans le snapshot, sortie de la fonction load.launch
+
+	Paramètres optionnels :
+	data     = None        :: np.array contenant tout les informations théoriques sur le système, sortie de la fonction load.launch
+	m        = 1,42478e+29 :: masse d'une particule
+	save     = False       :: booléen indiquant si la fonction doit enregistrer les graphiques (l'affichage se fait tout de même)
+	filesave = (...)       :: Tuple contenant les noms des fichiers dans l'ordre : ("Densite.pdf", "Potentiel.pdf", "Anisotropie.pdf", "Temperature.pdf", "Distribution.pdf")
+	prefix   = ""          :: Préfixe de la simulation. En combinaison avec save, enregistre les graphiques dans un fichier pdf de nom prefix + ".pdf".
+	suppose  = False       :: Doit on superposer les nouveaux graphes aux précédents !?
+	info     = ""          :: Quelques informations à rajouter dans le titre des graphiques.
+	"""
+
+	if prefix:
+		pp = PdfPages(prefix + '.pdf')
+
+	fig1 = plt.figure(prefix + "Densité")
+	if not suppose:
+		fig1.clf()
+	ax1  = fig1.add_subplot(111)
+
+	ax1.set_title("Densité " + info)
+	ax1.set_ylabel(r'$\rho(r) = m(r)/\frac{4}{3}\pi r^3$ en $kg m^{-3}$')
+	ax1.set_xlabel(r'$r$ en $m$')
+
+	ax1.loglog(Dens[:,0], Dens[:,1], '+')
+	if data != None:
+		ax1.loglog(data[:,0], data[:,3], 'r-')
+	xaxe = ax1.get_xlim()
+	yaxe = ax1.get_ylim()
+	ax1.set_xlim( (1e15,xaxe[1]) )
+	ax1.set_ylim( (np.min(Dens[:,1]),yaxe[1]) )
+	ax1.legend(('Densité de la simulation', 'Densité théorique'), 'lower left', shadow=True)
+
+	if save:
+		if prefix:
+			fig1.savefig(pp, format="pdf", transparent=True)
+		else:
+			fig1.savefig(filesave[0], format="pdf", transparent=True)
+
+	if aff:
+		fig1.show()
+	else:
+		plt.close()
+
+	fig2 = plt.figure(prefix + "Potentiel")
+	if not suppose:
+		fig2.clf()
+	ax2  = fig2.add_subplot(111)
+
+	ax2.set_title("Potentiel " + info)
+	ax2.set_ylabel(r'$\psi(r)$ en $km^2 s^{-2}$').set_fontsize('large')
+	ax2.set_xlabel(r'$r$ en $m$')
+
+	ax2.plot(Pot[:,0], Pot[:,1], '+')
+	if data != None:
+		ax2.plot(data[:,0], data[:,1], 'r-')
+	ax2.legend(('Potentiel de la simulation', 'Potentiel théorique'), 'lower right', shadow=True)
+
+	if save:
+		if prefix:
+			fig2.savefig(pp, format="pdf", transparent=True)
+		else:
+			fig2.savefig(filesave[1], format="pdf", transparent=True)
+
+	if aff:
+		fig2.show()
+	else:
+		plt.close()
+
+	fig3 = plt.figure(prefix + "Anisotropie")
+	if not suppose:
+		fig3.clf()
+	ax3  = fig3.add_subplot(111)
+
+	ax3.set_title("Anisotropie " + info)
+	ax3.set_ylabel(r'$\beta$')
+	ax3.set_xlabel(r'$r$ en $m$')
+
+	ax3.plot(Dens[:,0], Dens[:,3])
+	ax3.legend(('Anisotropie',), 'lower center', shadow=True)
+
+	if save:
+		if prefix:
+			fig3.savefig(pp, format="pdf", transparent=True)
+		else:
+			fig3.savefig(filesave[2], format="pdf", transparent=True)
+
+	if aff:
+		fig3.show()
+	else:
+		plt.close()
+
+	fig4 = plt.figure(prefix + "Température")
+	if not suppose:
+		fig4.clf()
+	ax4  = fig4.add_subplot(111)
+
+	ax4.set_title("Température " + info)
+	ax4.set_xlabel(r'$r$ en $m$')
+	ax4.set_ylabel(r'$T(r)$ en $km^2 s^{-2}$')
+
+	ax4.loglog(Dens[:,0], Dens[:,2])
+	ax4.legend(('Température',), 'lower left', shadow=True)
+
+	if save:
+		if prefix:
+			fig4.savefig(pp, format="pdf", transparent=True)
+		else:
+			fig4.savefig(filesave[3], format="pdf", transparent=True)
+
+	if aff:
+		fig4.show()
+	else:
+		plt.close()
+
+	fig5 = plotDistrib(Distrib, Pot, m, fileparam=fileparam, info=info)
+	if save:
+		if prefix:
+			fig5.savefig(pp, format="pdf", transparent=True)
+		else:
+			fig5.savefig(filesave[4], format="pdf", transparent=True)
+
+	if aff:
+		fig5.show()
+	else:
+		plt.close()
+
+	if aff:
+		plt.show()
+	else:
+		plt.close()
+
+	if prefix:
+		PlotCarte(prefix=prefix, pp=pp, save=save, aff=aff, video=video, info=info, nbbin=nbbin, BoxSize=BoxSize, center=center)
+	else:
+		PlotCarte(prefix=prefix, save=save, aff=aff, video=video, info=info, nbbin=nbbin, BoxSize=BoxSize, center=center)
+
+	if prefix:
+		pp.close()
+
+def PlotParam(name="TimeParam.dat", prefix="", Param=None, aff=True, save=False, info="", filelist=("Axial Ratio", "Viriel", "Temperature", "Anisotropie", "Rayon", "Vitesse du centre"), tmax=0.1, UT=9.77894e8, Td=8.02191e6):
+	if Param is None:
+		Param = np.array(Read_File(name))
+
+	pp = None
+	if prefix:
+		pp = PdfPages(prefix + '.pdf')
+
+
+	#info = " temps : %g"%( tmax * (i+1) * UT / (len(liste) * Td) )
+	x    = np.arange(0, len(Param), 1)
+	x    = tmax * (x+1) * UT / (len(x) * Td)
+
+	fig1 = plt.figure(prefix + "Axial Ratio")
+	axAR = fig1.add_subplot(111)
+
+	axAR.set_title("Axial Ratio " + info)
+	axAR.set_ylabel(r'Axial ratio')
+	axAR.set_xlabel(r'Time (temps dynamique)')
+
+	axAR.axis([0, tmax * (len(Param)+1) * UT / (len(x) * Td), 0.75, 1.2])
+
+	print(Param)
+	print(len(Param), len(x))
+
+	axAR.plot(x, Param[:,1], 'r-', x, Param[:,2], 'b-')
+	axAR.legend(('Petit axe', 'Grand axe'), 'lower right', shadow=True, fancybox=True)
+
+	if save or pp is not None:
+		if prefix and pp is not None:
+			fig1.savefig(pp, format="pdf", transparent=True)
+		else:
+			fig1.savefig(prefix + filelist[0] + ".pdf", format="pdf", transparent=True)
+
+	if aff:
+		fig1.show()
+	else:
+		plt.close()
+
+	fig2 = plt.figure(prefix + "Rapport du Viriel")
+	axV  = fig2.add_subplot(111)
+
+	axV.set_title("Rapport du Viriel " + info)
+	axV.set_xlabel(r'Time (temps dynamique)')
+	axV.set_ylabel(r'Rapport du Viriel')
+
+	axV.axis([0, tmax * (len(Param)+1) * UT / (len(x) * Td), -1.5, -0.5])
+
+	axV.plot(x, Param[:,3], 'r-')
+	axV.legend(('Rapport du Viriel', ), 'lower right', shadow=True, fancybox=True)
+
+	if save or pp is not None:
+		if prefix and pp is not None:
+			fig2.savefig(pp, format="pdf", transparent=True)
+		else:
+			fig2.savefig(prefix + filelist[1] + ".pdf", format="pdf", transparent=True)
+
+	if aff:
+		fig2.show()
+	else:
+		plt.close()
+
+	fig3 = plt.figure(prefix + "Température moyenne")
+	axTm = fig3.add_subplot(111)
+
+	axTm.set_title("Température moyenne " + info)
+	axTm.set_xlabel(r'Time (temps dynamique)')
+	axTm.set_ylabel(r'Température moyenne en $km^2 s^{-2}$')
+
+	axTm.axis([0, tmax * (len(Param)+1) * UT / (len(x) * Td), np.min(Param[:,4]) - 0.1*np.min(Param[:,4]), np.max(Param[:,4]) + np.max(Param[:,4])*0.1])
+
+	axTm.plot(x, Param[:,4], 'r-')
+	axTm.legend(('Température moyenne', ), 'lower right', shadow=True, fancybox=True)
+
+	if save or pp is not None:
+		if prefix and pp is not None:
+			fig3.savefig(pp, format="pdf", transparent=True)
+		else:
+			fig3.savefig(prefix + filelist[2] + ".pdf", format="pdf", transparent=True)
+
+	if aff:
+		fig3.show()
+	else:
+		plt.close()
+
+	fig4 = plt.figure(prefix + "Anisotropie")
+	axA  = fig4.add_subplot(111)
+
+	axA.set_title("Anisotropie " + info)
+	axA.set_ylabel(r'Anisotropie')
+	axA.set_xlabel(r'Time (temps dynamique)')
+
+	axA.axis([0, tmax * (len(Param)+1) * UT / (len(x) * Td), -0.5, 0.5])
+
+	axA.plot(x, Param[:,5], 'r-')
+	axA.legend(('Anisotropie', ), 'lower right', shadow=True, fancybox=True)
+
+	if save or pp is not None:
+		if prefix and pp is not None:
+			fig4.savefig(pp, format="pdf", transparent=True)
+		else:
+			fig4.savefig(prefix + filelist[3] + ".pdf", format="pdf", transparent=True)
+
+	if aff:
+		fig4.show()
+	else:
+		plt.close()
+
+	fig5 = plt.figure(prefix + "Rayon")
+	fig5.subplots_adjust(hspace=2.0)
+	axR  = fig5.add_subplot(111)
+
+	axR.set_title("Rayon " + info)
+	axR.set_xlabel(r'Time (temps dynamique)')
+	axR.set_ylabel(r'Rayon $m$')
+
+	axR.axis(xmax=tmax * (len(Param)+1) * UT / (len(x) * Td))
+
+	axR.plot(x, Param[:,6], 'r-', x, Param[:,7], 'b-', x, Param[:,8], 'g-')
+	leg = axR.legend((r'Rayon à $10%$', r'Rayon à $50%$', r'Rayon à $90%$'), 'lower left', bbox_to_anchor=(0., 0.02, 1., 0.102), ncol=3, mode="expand", fancybox=True)
+	leg.get_frame().set_facecolor("wheat")
+	leg.get_frame().set_alpha(0.7)
+
+	if save or pp is not None:
+		if prefix and pp is not None:
+			fig5.savefig(pp, format="pdf", transparent=True)
+		else:
+			fig5.savefig(prefix + filelist[4] + ".pdf", format="pdf", transparent=True)
+
+	if aff:
+		fig5.show()
+	else:
+		plt.close()
+
+	fig6 = plt.figure(prefix + "Vitesse du centre de densité")
+	axC  = fig6.add_subplot(111)
+
+	axC.set_title("Vitesse du centre de densité " + info)
+	axC.set_ylabel(r'Vitesse $km\,s^{-1}$')
+	axC.set_xlabel(r'Time (temps dynamique)')
+
+	axC.axis([0, tmax * (len(Param)+1) * UT / (len(x) * Td), -0.5, 0.5])
+
+	axC.plot(x, Param[:,5], 'r-')
+	axC.legend(('Vitesse du centre', ), 'lower right', shadow=True, fancybox=True)
+
+	if save or pp is not None:
+		if prefix and pp is not None:
+			fig6.savefig(pp, format="pdf", transparent=True)
+		else:
+			fig6.savefig(prefix + filelist[5] + ".pdf", format="pdf", transparent=True)
+
+	if aff:
+		fig6.show()
+	else:
+		plt.close()
+
+
+	if prefix:
+		pp.close()
+
+def PlotCarte(name="Particule-it.dat", Part=None, prefix="", pp=None, save=False, aff=True, video=False, info="", nbbin=300, arrow=None, BoxSize=180.12*p2m, center=0.0): #3.086e16, center=0.0): #180.12*3.086e16/2.0):
+	"""Trace la carte des particule sur les plans xOy, xOz et yOz.
+
+	Paramètres optionnels :
+	name   = "Particule-it.dat" :: Nom du fichier à charger.
+	prefix = ""		    :: Chaîne à ajouter devant le nom des fichiers
+	pp     = None		    :: Si un fichier à déjà été ouvert et que l'on veut écrire à sa suite.
+	save   = False		    :: Si l'on doit écrire dans un fichier les graphiques.
+	aff    = True		    :: Doit on afficher les graphiques.
+	video  = False		    :: Enregistre les cartes au format png dans le but de créer une vidéo avec un logiciel comme mencoder.
+	info   = ""                 :: Quelques informations à rajouter dans le titre des graphiques.
+	arrow  = None		    :: Trace un flèche du point arrow[0] au point arrow[1]. Les coordonnées sont associées aux entiers : x : 0, y : 1, z : 2.
+	"""
+	if Part is None:
+		Part   = np.array(Read_File(name))
+
+	FieldRange = [[center - BoxSize/2.0, center + BoxSize/2.0], [center - BoxSize/2.0, center + BoxSize/2.0]]
+
+	Carte1 = plt.figure(prefix + "Carte xOy")
+	axCar1 = Carte1.add_subplot(111)
+
+	axCar1.set_title("Carte xOy " + info)
+	axCar1.set_xlabel(r'$x$ en $m$')
+	axCar1.set_ylabel(r'$y$ en $m$')
+
+	hist, X, Y = np.histogram2d(Part[:,0], Part[:,1], bins=nbbin, range=FieldRange)
+
+	axCar1.axis([np.min(X), np.max(X), np.min(Y), np.max(Y)])
+	tmp = axCar1.pcolor(X, Y, hist.T)
+	Carte1.colorbar(tmp)
+	if arrow is not None:
+		arr1 = plt.Arrow(arrow[0,0], arrow[0,1], arrow[1,0] - arrow[0,0], arrow[1,1] - arrow[0,1], color='k', figure=Carte1)
+		axCar1.add_patch(arr1)
+
+	if pp is not None:
+		if prefix and pp is not None:
+			Carte1.savefig(pp, format="pdf", transparent=True)
+		else:
+			Carte1.savefig(prefix + "Carte_xOy.pdf", format="pdf", transparent=True)
+	if video:
+		Carte1.savefig(prefix + "Carte_xOy.png", format="png", transparent=True)
+
+	if aff:
+		Carte1.show()
+	else:
+		plt.close()
+
+	Carte2 = plt.figure(prefix + "Carte xOz")
+	axCar2 = Carte2.add_subplot(111)
+
+	axCar2.set_title("Carte xOz " + info)
+	axCar2.set_xlabel(r'$x$ en $m$')
+	axCar2.set_ylabel(r'$z$ en $m$')
+
+	hist, X, Y = np.histogram2d(Part[:,0], Part[:,2], bins=nbbin, range=FieldRange)
+
+	axCar2.axis([np.min(X), np.max(X), np.min(Y), np.max(Y)])
+	tmp = axCar2.pcolor(X, Y, hist.T)
+	Carte2.colorbar(tmp)
+	if arrow is not None:
+		arr2 = plt.Arrow(arrow[0,0], arrow[0,2], arrow[1,0] - arrow[0,0], arrow[1,2] - arrow[0,2], color='k', figure=Carte2)
+		axCar2.add_patch(arr2)
+
+	if pp is not None:
+		if prefix and pp is not None:
+			Carte2.savefig(pp, format="pdf", transparent=True)
+		else:
+			Carte2.savefig(prefix + "Carte_xOz.pdf", format="pdf", transparent=True)
+
+	if video:
+		Carte2.savefig(prefix + "Carte_xOz.png", format="png", transparent=True)
+
+	if aff:
+		Carte2.show()
+	else:
+		plt.close()
+
+	Carte3 = plt.figure(prefix + "Carte yOz")
+	axCar3 = Carte3.add_subplot(111)
+
+	axCar3.set_title("Carte yOz " + info)
+	axCar3.set_xlabel(r'$y$ en $m$')
+	axCar3.set_ylabel(r'$z$ en $m$')
+
+	hist, X, Y = np.histogram2d(Part[:,1], Part[:,2], bins=nbbin, range=FieldRange)
+
+	axCar3.axis([np.min(X), np.max(X), np.min(Y), np.max(Y)])
+	tmp = axCar3.pcolor(X, Y, hist.T)
+	Carte3.colorbar(tmp)
+	if arrow is not None:
+		arr3 = plt.Arrow(arrow[0,1], arrow[0,2], arrow[1,1] - arrow[0,1], arrow[1,2] - arrow[0,2], color='k', figure=Carte3)
+		axCar3.add_patch(arr3)
+
+	if save or pp is not None:
+		if pp is not None:
+			Carte3.savefig(pp, format="pdf", transparent=True)
+		else:
+			Carte3.savefig(prefix + "Carte_yOz.pdf", format="pdf", transparent=True)
+
+	if video:
+		Carte3.savefig(prefix + "Carte_yOz.png", format="png", transparent=True)
+
+	if aff:
+		Carte3.show()
+	else:
+		plt.close()
+
+
+def DistribVit(filename, prefix="", save=False, filesave="DistribVit.pdf", gaussianfits=False, indmax=3, offset=4):
+	"""Trace les distributions en vitesses (v_x, v_y, v_z) des particules.
+
+	Paramètres obligatoires :
+	filename :: Nom du fichier contenant les positions-vitesses des particules au format colonne : x, y, z, r, v_x, v_y, v_z, v.
+
+	Paramètres optionnels :
+	save     = False            :: booléen valant True si il faut sauvegarder le graphique sous forme de fichier.
+	filesave = "DistribVit.pdf" :: Nom du fichier sous lequel sauvegarder le graphique si save == True.
+	"""
+
+	Part = np.array(Read_File(filename), dtype=np.float64)
+	mean = np.mean(Part, axis=0, dtype=np.float64)
+	sig  = np.std(Part, axis=0, dtype=np.float64)
+
+	textstr = "mean : $%g$\nstd     : $%g$"
+	labels  = [r'$v_x$',r'$v_y$',r'$v_z$', r'$v$']
+
+	# new style method 2; use an axes array
+	fig, axs = plt.subplots(indmax, 1, num=prefix + "Distribution des vitesses", sharex=True)
+
+	for i in range(0, indmax):
+		nb= axs[i].hist(Part[:,i+offset], bins=100, label=labels[i], alpha=0.7)
+		if gaussianfits:
+			fit = lambda t : nb[0].max()*np.exp(-(t-mean[i+offset])**2/(2*sig[i+offset]**2))
+			axs[i].plot(nb[1], fit(nb[1]), 'r-', label='Gaussian fit')
+
+		leg = axs[i].legend(loc='upper right', shadow=False)
+		leg.get_frame().set_alpha(0.5)
+		# these are matplotlib.patch.Patch properies
+		props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
+
+		# place a text box in upper left in axes coords
+		axs[i].text(0.05, 0.95, textstr%(mean[i+offset], sig[i+offset]),
+				transform=axs[i].transAxes, fontsize=14,
+			        verticalalignment='top', bbox=props)
+
+		print(labels[i] + ", mean : %g, std : %g"%(mean[i+offset], sig[i+offset]))
+
+	if save:
+		plt.savefig("DistribVit.pdf", format="pdf")
+def plotpot(Pot, Brute, data):
+	"""Trace le potentiel tel que calculé par les fonction load.launch, et load.BruteForce, ainsi que le potentiel théorique.
+
+	Paramètres obligatoires :
+	Pot   :: np.array contenant le potentiel calculé par la fonction laod.launch.
+	Brute :: np.array contenant le potentiel calculé par la fonction load.BruteForce.
+	data  :: np.array contenant les données théoriques retourné par la fonction load.launch
+	"""
+	fig2 = plt.figure("Tous les potentiel")
+	ax2  = fig2.add_subplot(111)
+
+	ax2.set_title("Potentiel")
+	ax2.set_ylabel(r'$\psi(r)$').set_fontsize('large')
+	ax2.set_xlabel(r'$r$')
+
+	ax2.plot(Pot[:,0], Pot[:,1], 'b+', Brute[:,0], Brute[:,1], 'g+', data[:,0], data[:,1], 'r-')
+	ax2.legend(('Potentiel de la simulation', 'Potentiel Force Brute', 'Potentiel théorique'), 'lower right', shadow=True)
+
+	plt.show()
+
+if __name__ == "__main__":
+#	truc = launch("amas-king.dat")
+	Mass, Dens, Pot, Simu, Distrib, Ener = ld.launch("amas-king.dat", rsoft=0.00, nbbin=100)
+	ld.plot(Dens, Pot, Simu, Distrib, m=m, save=True)
+

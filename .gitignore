@@ -1,0 +1,6 @@
+.ropeproject/
+LibThese.egg-info/
+build/
+dist/
+doc/build/
+Divers/*
