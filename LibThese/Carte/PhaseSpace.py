@@ -1,4 +1,3 @@
-#! /usr/bin/env python
 # -*- coding:Utf8 -*-
 
 import matplotlib.colorbar as cb
@@ -12,6 +11,12 @@ from matplotlib.axes	     import Subplot
 from ..Utils		     import Histo as hs
 from ..Utils.Divers	     import VConcate
 from ..Gadget.Filter	     import Filter
+
+__all__ = [
+	"PhaseSpaceData",
+	"PSPlot",
+	"Map",
+]
 
 		#""".. py:class:: PhaseSpaceData(file, [AngularBins=None, format=1, nb_file=1, nb_bin=100, r_min=None, r_max=None, v_min=None, v_max=None, j_min=None, j_max=None])
 		#This class read a Gadget file and calculate the radius, the radial velocity and the angular momentum of each particules.
@@ -62,7 +67,9 @@ class PhaseSpaceData(Filter):
 			v_min=None,
 			v_max=None,
 			j_min=None,
-			j_max=None
+			j_max=None,
+			move_pos=None,
+			move_vel=None
 	):
 		super(Filter, self).__init__(file)
 		if format == 1:
@@ -73,6 +80,11 @@ class PhaseSpaceData(Filter):
 			super(Filter, self)._read_format3(nb_file)
 		else:
 			raise ValueError("Unrecognised file format:", format)
+
+		if move_pos is not None:
+			self.Part.Translate(move_pos)
+		if move_vel is not None:
+			self.Part.AddVelocity(move_vel)
 
 		if AngularBins is not None:
 			try:
@@ -85,47 +97,14 @@ class PhaseSpaceData(Filter):
 
 		self.nb_bin = nb_bin
 
-		############
-		# Calculs des quantités physiques voulues pour l'espace des phase :
-		###################################################################
-		self._r     = self.get_r(self.Part.NumpyPositions)
-		self._v     = self.get_rv(self.Part.NumpyPositions, self.Part.NumpyVelocities) / self._r
-		self._j     = self.get_j(self.Part.NumpyPositions, self.Part.NumpyVelocities)
-
-		if r_min is None:
-			r_min = self.r.min()
-		if r_max is None:
-			r_max = self.r.max()
-
-		if v_min is None:
-			v_min = self.v.min()
-		if v_max is None:
-			v_max = self.v.max()
-
-		if j_min is None:
-			j_min = self.j.min()
-		if j_max is None:
-			j_max = self.j.max()
-
-		##################
-		# Calculs des intervalles pour le comptage :
-		############################################
-		self._bins_r = 10**np.linspace(
-						np.log10(r_min),
-						np.log10(r_max),
-						self.nb_bin
-				)
-		self._bins_v = np.linspace(
-						v_min,
-						v_max,
-						self.nb_bin
-				)
-		self._bins_j = np.linspace(
-						j_min,
-						j_max,
-						self.nb_bin
-				)
-
+		self._do_bins(
+			r_min,
+			r_max,
+			v_min,
+			v_max,
+			j_min,
+			j_max
+		)
 		self.Create()
 
 	def _do_bins(self,
