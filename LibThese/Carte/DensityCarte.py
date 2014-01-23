@@ -1,4 +1,3 @@
-#! /usr/bin/env python
 # -*- coding:Utf8 -*-
 
 import matplotlib.colorbar as cb
@@ -11,6 +10,11 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from InitialCond.Gadget      import Gadget
 from ..Utils.Histo	     import Histogram
 
+__all__ = [
+	"Map",
+	"DensityCarte",
+]
+
 class Map(Gadget):
 	def __init__(self, *args, **kwargs):
 		"""
@@ -21,30 +25,84 @@ class Map(Gadget):
 		else:
 			self.nbbin = 100
 
-		if "use_vit" in kwargs["use_vit"]:
+		if "use_vit" in kwargs:
 			self.use_vit = kwargs["use_vit"]
 			del kwargs["use_vit"]
 		else:
 			self.use_vit = False
 
-		self._tlist = []
+		if "format" in kwargs:
+			format = kwargs["format"]
+			del kwargs["format"]
+		else:
+			format = 1
+
+		if "nbfile" in kwargs:
+			nbfile = kwargs["nbfile"]
+			del kwargs["nbfile"]
+		else:
+			nbfile = 1
+
+		letter      = [ "x", "y", "z" ]
+		self._tlist = dict()
+		self._data  = dict()
 		for a in it.combinations(range(3), 2):
-			self._tlist += [a]
+			self._tlist[letter[a[0]] + letter[a[1]]] = a
 
 		super(Map, self).__init__(*args, **kwargs)
+		if format == 1:
+			self._read_format1(nbfile)
+		elif format == 2:
+			self._read_format2(nbfile)
+		elif format == 3:
+			self._read_format3(nbfile)
+		else:
+			raise ValueError("File format not recognized!")
 
 		self.CreateMap()
 
 	def CreateMap(self):
 		if self.use_vit:
 			tmp = self.Part.NumpyVelocities
-		for t in self._tlist:
-			self._data[t] = np.histogram2d(
+		else:
+			tmp = self.Part.NumpyPositions
+		for k, t in self._tlist.items():
+			h, x, y = np.histogram2d(
 						tmp[:,t[0]],
 						tmp[:,t[1]],
 						bins=self.nbbin
 			)
 
+			self._data[k] = (h.T, x, y)
+
+	def Get(self, name):
+		if not name in self._tlist.keys():
+			raise ValueError(name + "not in allowed value: " + [i for i in self._tlist.keys()])
+		return self._data[name]
+
+	@staticmethod
+	def Plot(cls, name, fig=None, ax=None):
+		h, x, y = cls.Get(name)
+		h, x, y = h.copy(), x.copy(), y.copy()
+		tmp = np.ma.log10(np.ma.masked_where( h <= 0., h))
+		h[ tmp.nonzero() ] = tmp[ tmp.nonzero() ]
+
+		if fig is None and ax is None:
+			fig = plt.figure()
+			ax  = fig.add_subplot(111)
+		elif fig is None and ax is not None:
+			fig = ax.figure
+		elif ax is None:
+			ax = fig.add_subplot(111)
+
+		ax.set_xlabel("$" + name[0] + "$")
+		ax.set_ylabel("$" + name[1] + "$")
+		ax.set_xlim(x.min(), x.max())
+		ax.set_ylim(y.min(), y.max())
+
+		cb = ax.pcolormesh(x, y, h, cmap=cm.gray)
+
+		return fig, ax, cb
 
 class DensityCarte(Histogram):
 	"""Classe s'occupant de gérer les histogrammes pour tracer les cartes de densité du systèmes.
