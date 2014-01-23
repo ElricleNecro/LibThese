@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # LibThese documentation build configuration file, created by
-# sphinx-quickstart on Thu Jan 16 12:55:29 2014.
+# sphinx-quickstart on Thu Jan 16 15:51:43 2014.
 #
 # This file is execfile()d with the current directory set to its containing dir.
 #
@@ -13,6 +13,8 @@
 # serve to show the default.
 
 import sys, os
+
+sys.path.append(os.path.abspath('../'))
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -65,7 +67,7 @@ release = 'alpha'
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns = []
+exclude_patterns = ['_build']
 
 # The reST default role (used for this markup: `text`) to use for all documents.
 #default_role = None
@@ -75,7 +77,7 @@ exclude_patterns = []
 
 # If true, the current module name will be prepended to all description
 # unit titles (such as .. function::).
-#add_module_names = True
+add_module_names = False
 
 # If true, sectionauthor and moduleauthor directives will be shown in the
 # output. They are ignored by default.
@@ -284,7 +286,3 @@ epub_copyright = '2014, Guillaume Plum'
 
 # Allow duplicate toc entries.
 #epub_tocdup = True
-
-
-# Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {'http://docs.python.org/': None}
