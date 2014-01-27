@@ -26,7 +26,6 @@ class Animate(object):
 		ax = None :: Axes liées à la figure sur lesquels tracer.
 		builder = None :: Fonction charger de construire les axes pour la classe.
 		"""
-		print(kwargs)
 		if fig is None and ax is None and builder is not None:
 			fig, ax = builder()
 		elif fig is None and ax is None:
