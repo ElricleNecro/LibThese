@@ -110,15 +110,15 @@ if __name__ == '__main__':
 
 	func = MapPlot(args.ref, args.J)
 	anim = an.Animate(
-			save   = True,
-			frame  = args.Files,
-			xlabel = r"$r$",
-			ylabel = r"$\vec{r}.\vec{v}/r$",
-			title  = r"Movie Theater!",
-			xlim   = (1e-2, 20.),
-			ylim   = (-2, 2),
-			xscale = "log",
-			tmp    = args.tmp_dir,
+			save          = True,
+			frame         = args.Files,
+			xlabel        = r"$r$",
+			ylabel        = r"$\vec{r}.\vec{v}/r$",
+			title         = r"Movie Theater!",
+			xlim          = (1e-2, 20.),
+			ylim          = (-2, 2),
+			xscale        = "log",
+			tmp_directory = args.tmp_dir,
 	)
 	anim.update = func
 	anim.Plot(
