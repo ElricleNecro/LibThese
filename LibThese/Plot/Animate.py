@@ -20,7 +20,7 @@ class Animate(object):
 	de créer la figure et les axes comme demandé lors de la construction de la
 	figure.
 	"""
-	def __init__(self, fig=None, ax=None, frame=None, tmp_directory=None, builder=None, figkwargs=None, save=True, **kwargs):
+	def __init__(self, fig=None, ax=None, frame=None, tmp_directory=None, no_tmp_remove=False, builder=None, figkwargs=None, save=True, **kwargs):
 		"""Constructeur :
 		fig = None :: Figure à utiliser pour les graphiques.
 		ax = None :: Axes liées à la figure sur lesquels tracer.
@@ -53,16 +53,17 @@ class Animate(object):
 		self._ax_opt = kwargs
 
 		self._save = save
+		self._remove = not no_tmp_remove
 
+		self._tmp = None
 		if self._save and tmp_directory is not None:
-			self._tmp = tmp_directory
+			self._tmp_name = tmp_directory
 		elif self._save:
 			self._tmp = tmp.TemporaryDirectory()
-		else:
-			self._tmp = None
+			self._tmp_name = self._tmp.name
 
 	def __del__(self):
-		if self._tmp is not None:
+		if self._tmp is not None and self._remove:
 			self._tmp.cleanup()
 		#super(Animate, self).__del__()
 
@@ -148,7 +149,7 @@ class Animate(object):
 				self._ax.figure.canvas.draw()
 
 			if self._save:
-				self._save_fig(self.Fig, "%03d"%i, self._tmp.name, "png")
+				self._save_fig(self.Fig, "%03d"%i, self._tmp_name, "png")
 
 			if progressbar:
 				# Mise à jour de la barre de progression :
