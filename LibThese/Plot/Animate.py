@@ -20,7 +20,7 @@ class Animate(object):
 	de créer la figure et les axes comme demandé lors de la construction de la
 	figure.
 	"""
-	def __init__(self, fig=None, ax=None, frame=None, builder=None, figkwargs=None, save=True, **kwargs):
+	def __init__(self, fig=None, ax=None, frame=None, tmp=None, builder=None, figkwargs=None, save=True, **kwargs):
 		"""Constructeur :
 		fig = None :: Figure à utiliser pour les graphiques.
 		ax = None :: Axes liées à la figure sur lesquels tracer.
@@ -54,7 +54,9 @@ class Animate(object):
 
 		self._save = save
 
-		if self._save:
+		if self._save and tmp_directory is not None:
+			self._tmp = tmp_directory
+		elif self._save:
 			self._tmp = tmp.TemporaryDirectory()
 		else:
 			self._tmp = None
