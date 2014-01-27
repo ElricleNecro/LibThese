@@ -2,18 +2,18 @@
 # -*- coding:Utf8 -*-
 
 import os
-import h5py
 import argparse                   as ap
 import logging			  as log
 
 from LibThese      import Carte   as c
 from LibThese.Plot import Animate as an
+from LibThese.Plot import hdf5    as h
 
 class MapPlot(object):
 	def __init__(self, filename, J):
 		self._J = J
 		try:
-			self._file = h5py.File(filename, "r")
+			self._file = h.Data(filename)
 		except OSError as e:
 			log.fatal("Unable to open file '" + filename + "'")
 			raise e
@@ -42,8 +42,8 @@ class MapPlot(object):
 	def __call__(self, frame, ax, *o, **kwo):
 		p, v = None, None
 		try:
-			p   = self.File[ os.path.basename(frame) ]["timeparam"][0, 11:14]
-			v   = self.File[ os.path.basename(frame) ]["timeparam"][0, 14:17]
+			p = -self._file.get_time(os.path.basename(frame), "x", "y", "z")
+			v = -self._file.get_time(os.path.basename(frame), "vx", "vy", "vz")
 		except KeyError as e:
 			log.fatal("Unable to find Key: '" + frame + "'")
 			self.File.close()
