@@ -84,7 +84,13 @@ def get_args():
 		"-r",
 		"--ref",
 		type=str,
-		help="File in which we get all needed information."
+		help="File in which we get all needed information.",
+	)
+	parser.add_argument(
+		"--tmp-dir",
+		type=str,
+		help="Directory into which the script will create all graphics.",
+		default=None,
 	)
 	parser.add_argument(
 		"-j",
@@ -104,14 +110,15 @@ if __name__ == '__main__':
 
 	func = MapPlot(args.ref, args.J)
 	anim = an.Animate(
-			save=True,
-			frame=args.Files,
-			xlabel=r"$r$",
-			ylabel=r"$\vec{r}.\vec{v}/r$",
-			title=r"Movie Theater!",
-			xlim=(1e-2, 20.),
-			ylim=(-2, 2),
-			xscale="log"
+			save   = True,
+			frame  = args.Files,
+			xlabel = r"$r$",
+			ylabel = r"$\vec{r}.\vec{v}/r$",
+			title  = r"Movie Theater!",
+			xlim   = (1e-2, 20.),
+			ylim   = (-2, 2),
+			xscale = "log",
+			tmp    = args.tmp_dir,
 	)
 	anim.update = func
 	anim.Plot(
