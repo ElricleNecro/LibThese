@@ -47,13 +47,14 @@ class Data(object):
 		)
 
 	def get_time(self, node, *parameter):
-		return self._file[node]["timeparam"][0,:]
+		if len(parameter) == 0:
+			return self._file[node]["timeparam"][0,:]
+		return self._file[node]["timeparam"][0, [self._correspondance["timeparam"](i) for i in parameter] ]
 
 	def get_all_time(self, *parameter):
 		res = np.array( [[]] )
 		for a in self._file:
 			tmp = self.get_time(a, *parameter)
-			tmp = tmp[ [self._correspondance["timeparam"](i) for i in parameter] ]
 			res = np.resize(res, (res.shape[0] + 1, tmp.shape[0]))
 			res[ res.shape[0]-1, : ] = tmp[:]
 
