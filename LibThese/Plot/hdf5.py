@@ -47,7 +47,7 @@ class Data(object):
 		)
 
 	def get_time(self, node, *parameter):
-		return self._file[a]["timeparam"][0,:]
+		return self._file[node]["timeparam"][0,:]
 
 	def get_all_time(self, *parameter):
 		res = np.array( [[]] )
