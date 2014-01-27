@@ -62,3 +62,7 @@ class Data(object):
 
 	def get_fof(self, node):
 		return self._file[node]["ids"][:]
+
+	def __del__(self):
+		self._file.close()
+

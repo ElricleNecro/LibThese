@@ -70,9 +70,6 @@ class MapPlot(object):
 			log=True,
 		)
 
-	def __del__(self):
-		self._file.close()
-
 def get_args():
 	parser = ap.ArgumentParser()
 	parser.add_argument(
