@@ -13,7 +13,8 @@ class MapPlot(object):
 	def __init__(self, filename, J):
 		self._J = J
 		try:
-			self._file = h.Data(filename)
+			#self._file = h.Data(filename)
+			self.File = filename
 		except OSError as e:
 			log.fatal("Unable to open file '" + filename + "'")
 			raise e
