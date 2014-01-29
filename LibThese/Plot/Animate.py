@@ -143,13 +143,13 @@ class Animate(object):
 			self._ax.cla()
 			self._ax.set(**self._ax_opt)
 
-			self.update(a, self._ax, *args, **kwargs)
+			name = self.update(a, self._ax, *args, **kwargs)
 
 			if print:
 				self._ax.figure.canvas.draw()
 
 			if self._save:
-				self._save_fig(self.Fig, "%03d"%i, self._tmp_name, "png")
+				self._save_fig(self.Fig, name, self._tmp_name, "png")
 
 			if progressbar:
 				# Mise à jour de la barre de progression :

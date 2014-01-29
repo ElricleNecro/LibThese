@@ -70,6 +70,8 @@ class MapPlot(object):
 			log=True,
 		)
 
+		return frame
+
 def get_args():
 	parser = ap.ArgumentParser()
 	parser.add_argument(
