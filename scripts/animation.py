@@ -9,23 +9,13 @@ from LibThese      import Carte   as c
 from LibThese.Plot import Animate as an
 from LibThese.Plot import hdf5    as h
 
-class MapPlot(object):
-	def __init__(self, filename, J):
-		self._cb = None
-		self._J = J
+class FromHDF5(object):
+	def __init__(self, filename):
 		try:
-			#self._file = h.Data(filename)
 			self.File = filename
 		except OSError as e:
 			log.fatal("Unable to open file '" + filename + "'")
 			raise e
-
-	@property
-	def J(self):
-		return self._J
-	@J.setter
-	def J(self, val):
-		self._J = val
 
 	@property
 	def File(self):
@@ -40,11 +30,24 @@ class MapPlot(object):
 	def File(self):
 		del self._file
 
+class MapPlot(FromHDF5):
+	def __init__(self, filename, J):
+		self._cb = None
+		self._J = J
+		super(self, MapPlot).__init__(filename)
+
+	@property
+	def J(self):
+		return self._J
+	@J.setter
+	def J(self, val):
+		self._J = val
+
 	def __call__(self, frame, ax, *o, **kwo):
 		p, v = None, None
 		try:
-			p = -self._file.get_time(os.path.basename(frame), "x", "y", "z")
-			v = -self._file.get_time(os.path.basename(frame), "vx", "vy", "vz")
+			p = -self.File.get_time(os.path.basename(frame), "x", "y", "z")
+			v = -self.File.get_time(os.path.basename(frame), "vx", "vy", "vz")
 		except KeyError as e:
 			log.fatal("Unable to find Key: '" + frame + "'")
 			self.File.close()
