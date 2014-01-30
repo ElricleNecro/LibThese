@@ -100,17 +100,17 @@ class PhaseSpaceData(Filter):
 
 		self.nb_bin = nb_bin
 		if r_bin is None:
-			self.r_bin = self.nb_bin
+			self._r_bin = self.nb_bin
 		else:
-			self.r_bin = r_bin
+			self._r_bin = _r_bin
 		if v_bin is None:
-			self.v_bin = self.nb_bin
+			self._v_bin = self.nb_bin
 		else:
-			self.v_bin = v_bin
+			self._v_bin = _v_bin
 		if j_bin is None:
-			self.j_bin = self.nb_bin
+			self._j_bin = self.nb_bin
 		else:
-			self.j_bin = j_bin
+			self._j_bin = _j_bin
 
 		self._do_bins(
 			r_min,
@@ -158,17 +158,17 @@ class PhaseSpaceData(Filter):
 		self._bins_r = 10**np.linspace(
 						np.log10(r_min),
 						np.log10(r_max),
-						self.r_bin
+						self._r_bin
 				)
 		self._bins_v = np.linspace(
 						v_min,
 						v_max,
-						self.v_bin
+						self._v_bin
 				)
 		self._bins_j = np.linspace(
 						j_min,
 						j_max,
-						self.j_bin
+						self._j_bin
 				)
 
 	def Create(self):
