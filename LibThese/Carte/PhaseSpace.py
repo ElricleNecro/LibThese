@@ -353,7 +353,7 @@ class PSPlot(PhaseSpaceData):
 		if colorbar:
 			fig.colorbar(cb)
 
-		return fig, ax
+		return fig, ax, cb
 
 
 
