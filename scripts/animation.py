@@ -11,6 +11,7 @@ from LibThese.Plot import hdf5    as h
 
 class MapPlot(object):
 	def __init__(self, filename, J):
+		self._cb = None
 		self._J = J
 		try:
 			#self._file = h.Data(filename)
@@ -32,12 +33,11 @@ class MapPlot(object):
 	@File.setter
 	def File(self, val):
 		if isinstance(val, str):
-			self._file = h5py.File(val, "r")
+			self._file = h.Data(val)
 		else:
 			self._file = val
 	@File.deleter
 	def File(self):
-		self._file.close()
 		del self._file
 
 	def __call__(self, frame, ax, *o, **kwo):
@@ -65,10 +65,27 @@ class MapPlot(object):
 
 		map.GetSliceJ(self.J)
 
-		map.Plot(
-			fig=ax.figure,
-			ax=ax,
-			log=True,
+		_, _, cb = map.Plot(
+				fig=ax.figure,
+				ax=ax,
+				log=False,
+				#log=True,
+		)
+		if self._cb is not None:
+			self._cb.update_normal(cb)
+		else:
+			self._cb = ax.figure.colorbar(cb)
+
+		ax.text(
+			0.8,
+			0.95,
+			"Time: %g\nJ = %g"%(
+				self._file.get_time(os.path.basename(frame), "time"),
+				self.J,
+			),
+			transform=ax.transAxes,
+			verticalalignment='center',
+			horizontalalignment='left',
 		)
 
 		return frame
