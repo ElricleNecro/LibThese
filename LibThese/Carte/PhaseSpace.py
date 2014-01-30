@@ -102,15 +102,15 @@ class PhaseSpaceData(Filter):
 		if r_bin is None:
 			self._r_bin = self.nb_bin
 		else:
-			self._r_bin = _r_bin
+			self._r_bin = r_bin
 		if v_bin is None:
 			self._v_bin = self.nb_bin
 		else:
-			self._v_bin = _v_bin
+			self._v_bin = v_bin
 		if j_bin is None:
 			self._j_bin = self.nb_bin
 		else:
-			self._j_bin = _j_bin
+			self._j_bin = j_bin
 
 		self._do_bins(
 			r_min,
