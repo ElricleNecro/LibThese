@@ -9,7 +9,7 @@ class DensiteTable(dict):
 		self["r"]           = 0
 		self["densite"]     = 1
 		self["temperature"] = 2
-		self["aisotropy"]   = 3
+		self["anisotropy"]   = 3
 
 	def __call__(self, name):
 		return self[name]
@@ -39,24 +39,39 @@ class TimeTable(object):
 		return self._corres[name]
 
 class Data(object):
-	def __init__(self, file, status="r", param_table=TimeTable(), densite=DensiteTable()):
+	def __init__(self, file, status="r", corres=dict(timeparam=TimeTable(), densite=DensiteTable())):
 		self._file = h5py.File(file, status)
-		self._correspondance = dict(
-				timeparam=param_table,
-				densite=densite,
-		)
+		self._correspondance = corres
+		#self._correspondance = dict(
+				#timeparam=param_table,
+				#densite=densite,
+		#)
+
+	def get(self, node, sub, *parameter):
+		if len(parameter) == 0:
+			return self._file[node][sub][:]
+		return self._file[node][sub][ :, [self._correspondance[sub](i) for i in parameter] ]
+
+	def get_densite(self, node, *parameter):
+		return self.get(node, "densite", *parameter)
+		#return self.get(node, "densite", *[self._correspondance["densite"](i) for i in parameter])
 
 	def get_time(self, node, *parameter):
-		if len(parameter) == 0:
-			return self._file[node]["timeparam"][0,:]
-		return self._file[node]["timeparam"][0, [self._correspondance["timeparam"](i) for i in parameter] ]
+		return self.get(node, "timeparam", *parameter)[0, :]
+		#return self.get(node, "timeparam", *[self._correspondance["timeparam"](i) for i in parameter])[0, :]
+		#if len(parameter) == 0:
+			#return self._file[node]["timeparam"][0,:]
+		#return self._file[node]["timeparam"][0, [self._correspondance["timeparam"](i) for i in parameter] ]
 
 	def get_all_time(self, *parameter):
-		res = np.array( [[]] )
-		for a in self._file:
-			tmp = self.get_time(a, *parameter)
-			res = np.resize(res, (res.shape[0] + 1, tmp.shape[0]))
-			res[ res.shape[0]-1, : ] = tmp[:]
+		res = np.zeros(shape=(len(self._file), len(parameter)))
+		for i, a in enumerate(self._file):
+			res[i, :] = self.get_time(a, *parameter)
+		#res = np.array( [[]] )
+		#for a in self._file:
+			#tmp = self.get_time(a, *parameter)
+			#res = np.resize(res, (res.shape[0] + 1, tmp.shape[0]))
+			#res[ res.shape[0]-1, : ] = tmp[:]
 
 		return res
 
