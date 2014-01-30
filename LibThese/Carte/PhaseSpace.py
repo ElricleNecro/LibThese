@@ -69,7 +69,10 @@ class PhaseSpaceData(Filter):
 			j_min=None,
 			j_max=None,
 			move_pos=None,
-			move_vel=None
+			move_vel=None,
+			j_bin=None,
+			r_bin=None,
+			v_bin=None,
 	):
 		super(Filter, self).__init__(file)
 		if format == 1:
@@ -96,6 +99,18 @@ class PhaseSpaceData(Filter):
 			self._angular_bins  = None
 
 		self.nb_bin = nb_bin
+		if r_bin is None:
+			self.r_bin = self.nb_bin
+		else:
+			self.r_bin = r_bin
+		if v_bin is None:
+			self.v_bin = self.nb_bin
+		else:
+			self.v_bin = v_bin
+		if j_bin is None:
+			self.j_bin = self.nb_bin
+		else:
+			self.j_bin = j_bin
 
 		self._do_bins(
 			r_min,
@@ -143,17 +158,17 @@ class PhaseSpaceData(Filter):
 		self._bins_r = 10**np.linspace(
 						np.log10(r_min),
 						np.log10(r_max),
-						self.nb_bin
+						self.r_bin
 				)
 		self._bins_v = np.linspace(
 						v_min,
 						v_max,
-						self.nb_bin
+						self.v_bin
 				)
 		self._bins_j = np.linspace(
 						j_min,
 						j_max,
-						self.nb_bin
+						self.j_bin
 				)
 
 	def Create(self):
