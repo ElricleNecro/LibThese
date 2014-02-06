@@ -43,11 +43,32 @@ class Map(Gadget):
 		else:
 			nbfile = 1
 
-		letter      = [ "x", "y", "z" ]
-		self._tlist = dict()
+		if "RSelect" in kwargs:
+			self._r_select = kwargs["RSelect"]
+			del kwargs["RSelect"]
+		else:
+			self._r_select = None
+
+		if "move_pos" in kwargs:
+			move_pos = kwargs["move_pos"]
+			del kwargs["move_pos"]
+		else:
+			move_pos = None
+
+		if "move_vel" in kwargs:
+			move_vel = kwargs["move_vel"]
+			del kwargs["move_vel"]
+		else:
+			move_vel = None
+
+		if "to_center" in kwargs:
+			to_center = kwargs["to_center"]
+			del kwargs["to_center"]
+		else:
+			to_center = False
+
 		self._data  = dict()
-		for a in it.combinations(range(3), 2):
-			self._tlist[letter[a[0]] + letter[a[1]]] = a
+		self._tlist = self.GetPermutation([ "x", "y", "z" ])
 
 		super(Map, self).__init__(*args, **kwargs)
 		if format == 1:
@@ -59,13 +80,41 @@ class Map(Gadget):
 		else:
 			raise ValueError("File format not recognized!")
 
+		if to_center:
+			self.Part.Translate([-self.BoxSize/2.0]*3)
+
+		if move_pos is not None:
+			self.Part.Translate(move_pos)
+		if move_vel is not None:
+			self.Part.AddVelocity(move_vel)
+
 		self.CreateMap()
+
+	@staticmethod
+	def GetPermutation(liste):
+		tlist = dict()
+		for a in it.combinations(range(3), 2):
+			tlist[liste[a[0]] + liste[a[1]]] = a
+		return tlist
+
+	@staticmethod
+	def Norme(pos):
+		return np.sum( pos[:]**2, axis=1 )
 
 	def CreateMap(self):
 		if self.use_vit:
-			tmp = self.Part.NumpyVelocities
+			if self._r_select is not None:
+				id  = self.Norme( self.Part.NumpyVelocities ) <= self._r_select**2.
+				tmp = self.Part.NumpyVelocities[ id, :]
+			else:
+				tmp = self.Part.NumpyVelocities
 		else:
-			tmp = self.Part.NumpyPositions
+			if self._r_select is not None:
+				id  = self.Norme( self.Part.NumpyPositions ) <= self._r_select**2.
+				tmp = self.Part.NumpyPositions[ id, :]
+			else:
+				tmp = self.Part.NumpyPositions
+
 		for k, t in self._tlist.items():
 			h, x, y = np.histogram2d(
 						tmp[:,t[0]],
