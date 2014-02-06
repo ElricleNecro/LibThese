@@ -14,11 +14,12 @@ class Ode(object,metaclass=abc.ABCMeta):
 		self.X0   = np.array([0.0, 0.0], dtype=np.float64)
 		self.tmax = tmax
 		self.ti   = ti
-		self.dt   = dt
 		if N is None:
-			self.N     = (self.tmax - self.ti) / self.dt
+			self.dt = dt
+			self.N  = (self.tmax - self.ti) / self.dt
 		else:
-			self.dt    = (self.tmax - self.ti) / self.N
+			self.N  = N
+			self.dt = (self.tmax - self.ti) / self.N
 
 	@abc.abstractproperty
 	def X0(self):
