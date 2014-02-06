@@ -13,8 +13,8 @@ class SIB(o.Ode):
 	sphère isotherme et tronquée, en utilisant le changement de
 	variable de Milne.
 	"""
-	def __init__(self, t=100, ti = 0):
-		super(SIB, self).__init__(t, ti)
+	def __init__(self, t=100, ti = 0, dt=1e-4, N=None):
+		super(SIB, self).__init__(t, ti, dt, N)
 		self._X0 = np.array([3.0, 0.0], dtype=np.float64)
 
 	@property
