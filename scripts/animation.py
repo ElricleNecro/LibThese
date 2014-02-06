@@ -251,6 +251,6 @@ if __name__ == '__main__':
 	)
 	anim.update = func
 	anim.Plot(
-		progressbar=True,
+		progressbar=False,
 	)
 
