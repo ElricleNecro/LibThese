@@ -15,7 +15,6 @@ from ..Gadget.Filter	     import Filter
 __all__ = [
 	"PhaseSpaceData",
 	"PSPlot",
-	"Map",
 ]
 
 		#""".. py:class:: PhaseSpaceData(file, [AngularBins=None, format=1, nb_file=1, nb_bin=100, r_min=None, r_max=None, v_min=None, v_max=None, j_min=None, j_max=None])
