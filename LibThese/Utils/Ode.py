@@ -11,15 +11,15 @@ class Ode(object,metaclass=abc.ABCMeta):
 	et d'en tirer les différentes quantités intéressantes.
 	"""
 	def __init__(self, tmax=100, ti=0, dt=1e-4, N=None):
-		self.X0   = np.array([0.0, 0.0], dtype=np.float64)
-		self.tmax = tmax
-		self.ti   = ti
+		self.X0    = np.array([0.0, 0.0], dtype=np.float64)
+		self._tmax = tmax
+		self._ti   = ti
 		if N is None:
-			self.dt = dt
-			self.N  = (self.tmax - self.ti) / self.dt
+			self._dt = dt
+			self._N  = (self._tmax - self._ti) / self._dt
 		else:
-			self.N  = N
-			self.dt = (self.tmax - self.ti) / self.N
+			self._N  = N
+			self._dt = (self._tmax - self._ti) / self.N
 
 	@abc.abstractproperty
 	def X0(self):
@@ -34,31 +34,31 @@ class Ode(object,metaclass=abc.ABCMeta):
 		raise NotImplementedError("You MUST implement this method!")
 
 	@property
-	def Tmax(self):
-		return self.tmax
-	@Tmax.setter
-	def Tmax(self, n):
-		self.tmax = n
-		self.dt = (self.tmax - self.ti) / self.N
+	def tmax(self):
+		return self._tmax
+	@tmax.setter
+	def tmax(self, n):
+		self._tmax = n
+		self._dt = (self._tmax - self._ti) / self._N
 
 	@property
 	def NumPoints(self):
-		return self.N
+		return self._N
 	@NumPoints.setter
 	def NumPoints(self, n):
-		self.N  = n
-		self.dt = (self.tmax - self.ti) / self.N
+		self._N  = n
+		self._dt = (self._tmax - self._ti) / self._N
 
 	@property
-	def TimeStep(self):
-		return self.dt
-	@TimeStep.setter
-	def TimeStep(self, n):
-		self.dt = n
-		self.N  = (self.tmax - self.ti) / self.dt
+	def timeStep(self):
+		return self._dt
+	@timeStep.setter
+	def timeStep(self, n):
+		self._dt = n
+		self._N  = (self._tmax - self._ti) / self._dt
 
 	def Generate_x(self):
-		self.x                = np.arange(self.ti, self.tmax, self.dt)
+		self.x                = np.arange(self._ti, self._tmax, self._dt)
 
 	def Solve(self):
 		"""Résout l'équation différentielle définie par la fonction "func".
