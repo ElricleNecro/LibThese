@@ -15,8 +15,8 @@ class ADimKing(o.Ode):
 	"""Cette classe permet de gérer un Modèle de King Adimensionné,
 	et d'en tirer les différentes quantités intéressantes.
 	"""
-	def __init__(self, W0, t=100, ti=0):
-		super(ADimKing, self).__init__(t, ti)
+	def __init__(self, W0, t=100, ti=0, dt=1e-4, N=None):
+		super(ADimKing, self).__init__(t, ti, dt, N)
 		self.W0 = W0
 		self._X0 = np.array( [ W0, 0.0 ], dtype=np.float64 )
 
@@ -96,7 +96,7 @@ def FromConfig(conf_file, **kwargs):
 class DimKing(ADimKing):
 	"""Cette classe gére un modèle de King dimensionné.
 	"""
-	def __init__(self, W0, rc, sig_v, G=6.67e-11, N=10000, t=100, ti=0):
+	def __init__(self, W0, rc, sig_v, G=6.67e-11, N=10000, t=100, ti=0, dt=1e-4, Npas=None):
 		"""Construit un objet King avec toutes les quantités nécessaire pour le dimensionnement.
 		Attention à être cohérent avec vos unités.
 		W0           :: Condition initiale du King,
@@ -108,7 +108,7 @@ class DimKing(ADimKing):
 		Attention, hormis pour W0, les unités des autres paramètres doivent être cohérents entre eux :
 		si rc est donnée en parsec, il faudra adapter les unités de sig_v et G.
 		"""
-		super(DimKing, self).__init__(W0, t=t, ti=ti)
+		super(DimKing, self).__init__(W0, t=t, ti=ti, dt, Npas)
 		self.rc    = rc
 		self.sig_v = sig_v
 		self.G     = G
