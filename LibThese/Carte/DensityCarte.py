@@ -5,6 +5,7 @@ import matplotlib.pyplot   as plt
 import matplotlib.cm	   as cm
 import itertools	   as it
 import numpy		   as np
+import numexpr		   as ne
 
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from InitialCond.Gadget      import Gadget
@@ -101,17 +102,21 @@ class Map(Gadget):
 	def Norme(pos):
 		return np.sum( pos[:]**2, axis=1 )
 
+	@staticmethod
+	def SelectFromRadius(x, y, z, r):
+		return ne.evaluate("sqrt( x**2 + y**2 + z**2 ) <= r ")
+
 	def CreateMap(self):
 		if self.use_vit:
 			if self._r_select is not None:
-				id  = self.Norme( self.Part.NumpyVelocities ) <= self._r_select**2.
-				tmp = self.Part.NumpyVelocities[ id, :]
+				tmp = self.Part.NumpyVelocities
+				tmp = tmp[ self.SelectFromRadius( tmp[:, 0], tmp[:, 1], tmp[:, 2], self._r_select ) ]
 			else:
 				tmp = self.Part.NumpyVelocities
 		else:
 			if self._r_select is not None:
-				id  = self.Norme( self.Part.NumpyPositions ) <= self._r_select**2.
-				tmp = self.Part.NumpyPositions[ id, :]
+				tmp = self.Part.NumpyPositions
+				tmp = tmp[ self.SelectFromRadius( tmp[:, 0], tmp[:, 1], tmp[:, 2], self._r_select ) ]
 			else:
 				tmp = self.Part.NumpyPositions
 
