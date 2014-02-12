@@ -372,6 +372,7 @@ if __name__ == '__main__':
 			xscale        = args.xscale,
 			yscale        = args.yscale,
 			tmp_directory = args.tmp_dir,
+			grid          = args.grid,
 	)
 	anim.update = func
 	anim.Plot(
