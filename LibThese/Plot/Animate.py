@@ -20,7 +20,7 @@ class Animate(object):
 	de créer la figure et les axes comme demandé lors de la construction de la
 	figure.
 	"""
-	def __init__(self, fig=None, ax=None, frame=None, tmp_directory=None, no_tmp_remove=False, builder=None, figkwargs=None, save=True, **kwargs):
+	def __init__(self, fig=None, ax=None, frame=None, tmp_directory=None, no_tmp_remove=False, builder=None, figkwargs=None, save=True, grid=False, **kwargs):
 		"""Constructeur :
 		fig = None :: Figure à utiliser pour les graphiques.
 		ax = None :: Axes liées à la figure sur lesquels tracer.
@@ -54,6 +54,7 @@ class Animate(object):
 
 		self._save = save
 		self._remove = not no_tmp_remove
+		self._grid = grid
 
 		self._tmp = None
 		if self._save and tmp_directory is not None:
@@ -142,6 +143,8 @@ class Animate(object):
 			# On efface le graphique précédent :
 			self._ax.cla()
 			self._ax.set(**self._ax_opt)
+			if self._grid:
+				self._ax.grid()
 
 			name = self.update(a, self._ax, *args, **kwargs)
 
