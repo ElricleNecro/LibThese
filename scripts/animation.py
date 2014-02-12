@@ -162,7 +162,7 @@ class MapPlot(FromHDF5):
 
 		p = None
 		try:
-			p = -self.File.get_time(os.path.basename(frame), "x", "y", "z")
+			p = self.File.get_time(os.path.basename(frame), "x", "y", "z")
 		except KeyError as e:
 			log.fatal("Unable to find Key: '" + frame + "'")
 			self.File.close()
@@ -172,23 +172,24 @@ class MapPlot(FromHDF5):
 				frame,
 				nbbin=self._nb_bin,
 				RSelect=self._select,
-				#move_pos=p,
+				move_pos=-p,
 				to_center=self._spherical_selection,
 		)
 
+		ind = map._tlist[self.Plan]
 		_, _, cb = map.Plot(
 				map,
 				self.Plan,
 				fig=ax.figure,
 				ax=ax,
 		)
+		ax.plot(p[ ind[0] ], p[ ind[1] ], "r+", linewidth=10, markersize=12, markeredgewidth=13)
+
 		if self._cb is not None:
 			self._cb.update_normal(cb)
 		else:
 			self._cb = ax.figure.colorbar(cb)
 
-		ind = map._tlist[self.Plan]
-		ax.plot(p[ind[0]], p[ind[1]], "r+", linewidth=10, markersize=12, markeredgewidth=13)
 		ax.text(
 			0.8,
 			0.95,
