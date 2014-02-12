@@ -108,7 +108,7 @@ class DimKing(ADimKing):
 		Attention, hormis pour W0, les unités des autres paramètres doivent être cohérents entre eux :
 		si rc est donnée en parsec, il faudra adapter les unités de sig_v et G.
 		"""
-		super(DimKing, self).__init__(W0, t=t, ti=ti, dt, Npas)
+		super(DimKing, self).__init__(W0, t=t, ti=ti, dt=dt, N=Npas)
 		self.rc    = rc
 		self.sig_v = sig_v
 		self.G     = G
