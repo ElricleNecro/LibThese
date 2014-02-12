@@ -254,6 +254,11 @@ def set_common_args(parser):
 		type=str,
 		help="Set Y axis scale.",
 	)
+	parser.add_argument(
+		"--grid",
+		action="store_true",
+		help="Print a grid on graphics?",
+	)
 
 def create_sub_PSMap(sub):
 	parser = sub.add_parser('psplot', help="Plot the phase space of multiple files.")
