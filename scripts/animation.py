@@ -1,6 +1,9 @@
 #! /usr/bin/env python3
 # -*- coding:Utf8 -*-
 
+import matplotlib as ml
+ml.use('agg')
+
 import os
 import argparse                   as ap
 import logging			  as log
