@@ -39,7 +39,7 @@ class Animate(object):
 		elif ax is None:
 			ax = fig.add_subplot(111, **kwargs)
 		else:
-			raise WeirdosError
+			raise WeirdosError()
 
 		if frame is not None: # and isinstance(frame, (tuple, list, np.array)):
 			self._frame = frame
