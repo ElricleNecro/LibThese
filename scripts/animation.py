@@ -109,6 +109,9 @@ class PSPlot(FromHDF5):
 class LogDensity(FromHDF5):
 	def __init__(self, args):
 		super(LogDensity, self).__init__(args)
+		self._x  = np.linspace(args.xlim[0], args.xlim[1], 20)
+		self._y2 = self._x**(-2)
+		self._y4 = self._x**(-4)
 
 	def __call__(self, frame, ax, *o, **kwo):
 		dlog = None
@@ -120,6 +123,8 @@ class LogDensity(FromHDF5):
 			raise e
 
 		ax.plot(dlog[:,0], dlog[:,1], "-")
+		ax.plot(self._x, self._y2, "-")
+		ax.plot(self._x, self._y4, "-")
 
 		ax.text(
 			0.8,
