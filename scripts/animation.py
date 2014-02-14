@@ -180,7 +180,7 @@ class MapPlot(FromHDF5):
 				frame,
 				nbbin=self._nb_bin,
 				RSelect=self._select,
-				move_pos=-p,
+				#move_pos=-p,
 				to_center=self._spherical_selection,
 		)
 
