@@ -4,7 +4,7 @@
 #--------------------------------------------------------------------------------------------------------------
 # All necessary import:
 #--------------------------------------------------------------------------------------------------------------
-import os, sys, stat
+import os, sys, glob
 
 try:
 	import InitialCond
@@ -39,6 +39,10 @@ setup(
 	description = 'Python Module for analysis gadget simulation.',
 	author      = 'Guillaume Plum',
 	packages    = packages,
+	data_files  = [
+		('bin', ['scripts/animationv2.py']),
+		('share/LibThese/animation-plugins', glob.glob("share/LibThese/animation-plugins/*.py")),
+	],
 )
 
 #vim:spelllang=
