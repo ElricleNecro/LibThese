@@ -35,7 +35,7 @@ packages = st.find_packages()
 #--------------------------------------------------------------------------------------------------------------
 setup(
 	name        = 'LibThese',
-	version     = '2.0a',
+	version     = '2.0',
 	description = 'Python Module for analysis gadget simulation.',
 	author      = 'Guillaume Plum',
 	packages    = packages,
