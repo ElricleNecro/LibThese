@@ -1,6 +1,6 @@
 # -*- coding:Utf8 -*-
 import os
-import numpoy as np
+import numpy as np
 import logging as log
 
 from .Base import FromHDF5, register_module
