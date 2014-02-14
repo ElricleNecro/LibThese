@@ -1,6 +1,7 @@
 # -*- coding:Utf8 -*-
 import os
 
+from LibThese      import Carte   as c
 from .Base import FromHDF5, register_module
 
 class PSPlot(FromHDF5):
@@ -19,13 +20,14 @@ class PSPlot(FromHDF5):
 
 	def __call__(self, frame, ax, *o, **kwo):
 		p, v = None, None
-		try:
-			p = -self.File.get_time(os.path.basename(frame), "x", "y", "z")
-			v = -self.File.get_time(os.path.basename(frame), "vx", "vy", "vz")
-		except KeyError as e:
-			log.fatal("Unable to find Key: '" + frame + "'")
-			self.File.close()
-			raise e
+		if self.File is not None:
+			try:
+				p = -self.File.get_time(os.path.basename(frame), "x", "y", "z")
+				v = -self.File.get_time(os.path.basename(frame), "vx", "vy", "vz")
+			except KeyError as e:
+				log.fatal("Unable to find Key: '" + frame + "'")
+				self.File.close()
+				raise e
 
 		map = c.PSPlot(
 				frame,
@@ -58,7 +60,7 @@ class PSPlot(FromHDF5):
 			0.8,
 			0.95,
 			"Time: %g\nJ = %g"%(
-				self._file.get_time(os.path.basename(frame), "time"),
+				self._file.get_time(os.path.basename(frame), "time") if self.File is not None else map.time,
 				self.J,
 			),
 			transform=ax.transAxes,
