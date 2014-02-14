@@ -51,7 +51,7 @@ def set_common_args(parser):
 		"--tmp-dir",
 		type=str,
 		help="Directory into which the script will create all graphics.",
-		default=None,
+		default="/tmp/",
 	)
 	parser.add_argument(
 		"--xlabel",
