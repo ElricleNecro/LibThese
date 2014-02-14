@@ -1,8 +1,9 @@
 # -*- coding:Utf8 -*-
 import os
-import numpoy as np
+import numpy as np
 import logging as log
 
+from LibThese      import Carte   as c
 from .Base import FromHDF5, register_module
 
 class MapPlot(FromHDF5):
@@ -35,12 +36,13 @@ class MapPlot(FromHDF5):
 			self._resize_not_done = False
 
 		p = None
-		try:
-			p = self.File.get_time(os.path.basename(frame), "x", "y", "z")
-		except KeyError as e:
-			log.fatal("Unable to find Key: '" + frame + "'")
-			self.File.close()
-			raise e
+		if self.File is not None:
+			try:
+				p = self.File.get_time(os.path.basename(frame), "x", "y", "z")
+			except KeyError as e:
+				log.fatal("Unable to find Key: '" + frame + "'")
+				self.File.close()
+				raise e
 
 		map = c.Map(
 				frame,
@@ -57,7 +59,8 @@ class MapPlot(FromHDF5):
 				fig=ax.figure,
 				ax=ax,
 		)
-		ax.plot(p[ ind[0] ], p[ ind[1] ], "r+", linewidth=10, markersize=12, markeredgewidth=13)
+		if p is not None:
+			ax.plot(p[ ind[0] ], p[ ind[1] ], "r+", linewidth=10, markersize=12, markeredgewidth=13)
 
 		if self._cb is not None:
 			self._cb.update_normal(cb)
@@ -68,7 +71,7 @@ class MapPlot(FromHDF5):
 			0.8,
 			0.95,
 			"Time: %g"%(
-				self._file.get_time(os.path.basename(frame), "time"),
+				self._file.get_time(os.path.basename(frame), "time") if self.File is not None else map.time,
 			),
 			transform=ax.transAxes,
 			verticalalignment='center',
