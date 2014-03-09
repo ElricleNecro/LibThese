@@ -14,6 +14,9 @@ class MapPlot(FromHDF5):
 		self._nb_bin = args.nb_bin
 		self._spherical_selection = args.spherical_selection
 		self._resize_not_done = True
+		self._plot_dc = args.plot_dc
+		self._xlim = args.xlim
+		self._ylim = args.ylim
 		super(MapPlot, self).__init__(args)
 
 	@property
@@ -46,7 +49,11 @@ class MapPlot(FromHDF5):
 
 		map = c.Map(
 				frame,
-				nbbin=self._nb_bin,
+				nbbin=(
+					np.linspace(self._xlim[0], self._xlim[1], self._nb_bin),
+					np.linspace(self._ylim[0], self._ylim[1], self._nb_bin),
+				),
+				#nbbin=self._nb_bin,
 				RSelect=self._select,
 				#move_pos=-p,
 				to_center=self._spherical_selection,
@@ -59,7 +66,7 @@ class MapPlot(FromHDF5):
 				fig=ax.figure,
 				ax=ax,
 		)
-		if p is not None:
+		if p is not None and self._plot_dc:
 			ax.plot(p[ ind[0] ], p[ ind[1] ], "r+", linewidth=10, markersize=12, markeredgewidth=13)
 
 		if self._cb is not None:
@@ -120,6 +127,13 @@ def create_sub_Map(sub):
 		action='store_true',
 		help="Are we using the 'Spherical selection' version of the verification code?",
 	)
+	parser.add_argument(
+		"--plot-density-center",
+		help="Plot Density center on top of the map.",
+		dest="plot_dc",
+		action='store_true',
+	)
+
 	return parser
 
 register_module(create_sub_Map)
