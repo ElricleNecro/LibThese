@@ -48,7 +48,13 @@ if __name__ == '__main__':
 			grid          = args.grid,
 	)
 	anim.update = func
-	anim.Plot(
-		progressbar=False,
-	)
+	if args.parallel:
+		anim.PlotParallel(
+			nb_proc=args.nb_proc,
+			progressbar=False,
+		)
+	else:
+		anim.Plot(
+			progressbar=False,
+		)
 
