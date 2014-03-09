@@ -8,6 +8,7 @@ import numpy    as np
 import tempfile as tmp
 
 from matplotlib import pyplot as plt
+from multiprocessing import Pool
 
 class WeirdosError(Exception):
 	def __init__(self, error="?"):
@@ -133,22 +134,44 @@ class Animate(object):
 		"""
 		raise NotImplementedError
 
-	def Plot(self, *args, print=False, progressbar=True, **kwargs):
+	def _plot(self, iteration, *args, **kwargs):
+		# On efface le graphique précédent :
+		self._ax.cla()
+		self._ax.set(**self._ax_opt)
+		if self._grid:
+			self._ax.grid()
+
+		name = self.update(iteration, self._ax, *args, **kwargs)
+
+		if print:
+			self._ax.figure.canvas.draw()
+
+		if self._save:
+			self._save_fig(self.Fig, name, self._tmp_name, "png")
+
+	def PlotParallel(self, *args, nb_proc=4, print=False, progressbar=False, **kwargs):
+		with Pool(processes=nb_proc) as pool:
+			res = pool.map( self._plot, self._frame )
+
+	def Plot(self, *args, to_print=False, progressbar=True, **kwargs):
 		if progressbar:
 			from pacmanprogressbar import Pacman
 			# On prépare la barre de progression :
 			p = Pacman(start=0, end=len(self._frame)+1)
 
 		for i, a in enumerate(self._frame):
+			#self._plot(a, *args, **kwargs)
 			# On efface le graphique précédent :
 			self._ax.cla()
-			self._ax.set(**self._ax_opt)
+			#self._ax.set(**self._ax_opt)
 			if self._grid:
 				self._ax.grid()
 
 			name = self.update(a, self._ax, *args, **kwargs)
 
-			if print:
+			self._ax.update(self._ax_opt)
+
+			if to_print:
 				self._ax.figure.canvas.draw()
 
 			if self._save:
