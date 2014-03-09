@@ -65,13 +65,13 @@ def set_common_args(parser):
 	)
 	parser.add_argument(
 		"--xlim",
-		type=str,
+		type=float,
 		help="Set X axis limits.",
 		nargs=2,
 	)
 	parser.add_argument(
 		"--ylim",
-		type=str,
+		type=float,
 		help="Set Y axis limits.",
 		nargs=2,
 	)
@@ -89,6 +89,18 @@ def set_common_args(parser):
 		"--grid",
 		action="store_true",
 		help="Print a grid on graphics?",
+	)
+	parser.add_argument(
+		"-p",
+		"--parallel",
+		help="Launch multiple instance at once.",
+		action='store_true',
+	)
+	parser.add_argument(
+		"--nb-proc",
+		help="Number of thread to launch.",
+		type=int,
+		default=4,
 	)
 
 #class ArgumentParser(object):
