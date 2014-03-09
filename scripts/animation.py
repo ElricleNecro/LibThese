@@ -147,6 +147,7 @@ class MapPlot(FromHDF5):
 		self._nb_bin = args.nb_bin
 		self._spherical_selection = args.spherical_selection
 		self._resize_not_done = True
+		self._plot_dc = args.plot_dc
 		super(MapPlot, self).__init__(args)
 
 	@property
@@ -191,7 +192,8 @@ class MapPlot(FromHDF5):
 				fig=ax.figure,
 				ax=ax,
 		)
-		ax.plot(p[ ind[0] ], p[ ind[1] ], "r+", linewidth=10, markersize=12, markeredgewidth=13)
+		if self._plot_dc:
+			ax.plot(p[ ind[0] ], p[ ind[1] ], "r+", linewidth=10, markersize=12, markeredgewidth=13)
 
 		if self._cb is not None:
 			self._cb.update_normal(cb)
@@ -242,13 +244,13 @@ def set_common_args(parser):
 	)
 	parser.add_argument(
 		"--xlim",
-		type=str,
+		type=float,
 		help="Set X axis limits.",
 		nargs=2,
 	)
 	parser.add_argument(
 		"--ylim",
-		type=str,
+		type=float,
 		help="Set Y axis limits.",
 		nargs=2,
 	)
@@ -335,6 +337,12 @@ def create_sub_Map(sub):
 		"--spherical-selection",
 		action='store_true',
 		help="Are we using the 'Spherical selection' version of the verification code?",
+	)
+	parser.add_argument(
+		"--plot-density-center",
+		help="Plot Density center on top of the map.",
+		dest="plot_dc",
+		action='store_true',
 	)
 
 def create_sub_LogDensity(sub):
