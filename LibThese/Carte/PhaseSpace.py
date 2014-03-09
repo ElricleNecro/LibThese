@@ -214,10 +214,18 @@ class PhaseSpaceData(Filter):
 			raise ValueError("Bad value, nothing in it's bin!")
 		indice = self._dict_corres_value[ pos_in_bin_j ]
 
+		##########################################################################################################################
+		# Solution dégueulasse. Trouver mieux.
+		##########################################################################################################################
+		try:
+			dj = self.j_bin[pos_in_bin_j+1] - self.j_bin[pos_in_bin_j]
+		except IndexError:
+			dj = self.j_bin[1] - self.j_bin[0]
+
 		return		self._r[ self._corres_ind[ (indice[0]+1):(indice[1]+1) ] ], \
 				self._v[ self._corres_ind[ (indice[0]+1):(indice[1]+1) ] ], \
 				self._j[ self._corres_ind[ (indice[0]+1):(indice[1]+1) ] ], \
-				self.j_bin[pos_in_bin_j+1] - self.j_bin[pos_in_bin_j]
+				dj
 				#self._j[ self._corres_ind[ (indice[0]+1):(indice[1]+1) ] + 1 ] - self._j[ self._corres_ind[ (indice[0]+1):(indice[1]+1) ] ]
 
 	@property
