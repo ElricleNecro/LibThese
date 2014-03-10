@@ -56,17 +56,29 @@ class PSPlot(FromHDF5):
 		else:
 			self._cb = ax.figure.colorbar(cb)
 
-		ax.text(
-			0.8,
-			0.95,
-			"Time: %g\nJ = %g"%(
-				self._file.get_time(os.path.basename(frame), "time") if self.File is not None else map.time,
-				self.J,
-			),
-			transform=ax.transAxes,
-			verticalalignment='center',
-			horizontalalignment='left',
-		)
+		if self.J is None:
+			ax.text(
+				0.8,
+				0.95,
+				"Time: %g\nAll J"%(
+					self._file.get_time(os.path.basename(frame), "time") if self.File is not None else map.time,
+				),
+				transform=ax.transAxes,
+				verticalalignment='center',
+				horizontalalignment='left',
+			)
+		else:
+			ax.text(
+				0.8,
+				0.95,
+				"Time: %g\nJ = %g"%(
+					self._file.get_time(os.path.basename(frame), "time") if self.File is not None else map.time,
+					self.J,
+				),
+				transform=ax.transAxes,
+				verticalalignment='center',
+				horizontalalignment='left',
+			)
 
 		return frame
 
