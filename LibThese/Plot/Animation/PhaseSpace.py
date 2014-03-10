@@ -88,13 +88,11 @@ def create_sub_PSMap(sub):
 		dest="J",
 		type=float,
 		help="Angular Momentum to use.",
-		default=None,
 	)
 	parser.add_argument(
 		"--j-bin",
 		type=int,
 		help="Number of bins of angular momentum.",
-		default=None,
 	)
 	return parser
 
