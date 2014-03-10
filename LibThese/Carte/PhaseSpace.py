@@ -157,17 +157,17 @@ class PhaseSpaceData(Filter):
 		self._bins_r = 10**np.linspace(
 						np.log10(r_min),
 						np.log10(r_max),
-						self._r_bin
+						self._r_bin+1
 				)
 		self._bins_v = np.linspace(
 						v_min,
 						v_max,
-						self._v_bin
+						self._v_bin+1
 				)
 		self._bins_j = np.linspace(
 						j_min,
 						j_max,
-						self._j_bin
+						self._j_bin+1
 				)
 
 	def Create(self):
@@ -211,7 +211,7 @@ class PhaseSpaceData(Filter):
 		"""
 		pos_in_bin_j = np.digitize( [ang], self.j_bin)[0]
 		if not pos_in_bin_j in self._dict_corres_value:
-			raise ValueError("Bad value, nothing in it's bin!")
+			raise ValueError("Bad value, nothing in it's bin: j in [" + str(self.j.max()) + ", " + str(self.j.max()) + "]")
 		indice = self._dict_corres_value[ pos_in_bin_j ]
 
 		##########################################################################################################################
@@ -220,6 +220,7 @@ class PhaseSpaceData(Filter):
 		try:
 			dj = self.j_bin[pos_in_bin_j+1] - self.j_bin[pos_in_bin_j]
 		except IndexError:
+			print("Solution dégueulasse !")
 			dj = self.j_bin[1] - self.j_bin[0]
 
 		return		self._r[ self._corres_ind[ (indice[0]+1):(indice[1]+1) ] ], \
