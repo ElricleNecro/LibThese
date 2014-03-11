@@ -211,7 +211,7 @@ class PhaseSpaceData(Filter):
 		"""
 		pos_in_bin_j = np.digitize( [ang], self.j_bin)[0]
 		if not pos_in_bin_j in self._dict_corres_value:
-			raise ValueError("Bad value, nothing in it's bin: j in [" + str(self.j.max()) + ", " + str(self.j.max()) + "]")
+			raise ValueError("Bad value, nothing in it's bin: j in [" + str(self.j.min()) + ", " + str(self.j.max()) + "]")
 		indice = self._dict_corres_value[ pos_in_bin_j ]
 
 		##########################################################################################################################
