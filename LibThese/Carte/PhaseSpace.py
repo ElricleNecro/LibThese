@@ -338,11 +338,11 @@ class PSPlot(PhaseSpaceData):
 
 	def GetSliceJ(self, binJ=None):
 		if binJ is None:
-			r, vr, j, dj = super(PSPlot, self).r, super(PSPlot, self).v, super(PSPlot, self).j, 1
-			j[:] = 1
+			r, vr, _, dj = super(PSPlot, self).r, super(PSPlot, self).v, super(PSPlot, self).j, 1
+			#j[:] = 1
 			j_norm = False
 		else:
-			r, vr, j, dj = super(PSPlot, self).GetSliceJ(binJ)
+			r, vr, _, dj = super(PSPlot, self).GetSliceJ(binJ)
 			j_norm = True
 
 		self.CreateHistogram(r, vr, binJ, dj, j_norm)
@@ -353,8 +353,10 @@ class PSPlot(PhaseSpaceData):
 				fig = plt.figure()
 			ax = fig.add_subplot(
 					111,
-					ylim   = (-2, 2),
-					xlim   = (1e-2, 20),
+					ylim   = (self.v.min(), self.v.max()),
+					xlim   = (self.r.min(), self.r.max()),
+					#ylim   = (-2, 2),
+					#xlim   = (1e-2, 20),
 					xscale = "log",
 			)
 		if ax is not None and fig is None:
