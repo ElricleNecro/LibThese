@@ -347,7 +347,7 @@ class PSPlot(PhaseSpaceData):
 
 		self.CreateHistogram(r, vr, binJ, dj, j_norm)
 
-	def Plot(self, fig=None, ax=None, log=False, colorbar=False):
+	def Plot(self, fig=None, ax=None, log=False, colorbar=False, vmin=None, vmax=None):
 		if ax is None:
 			if fig is None:
 				fig = plt.figure()
@@ -372,7 +372,7 @@ class PSPlot(PhaseSpaceData):
 		else:
 			to_plot = self.hist
 
-		cb = ax.pcolormesh(self.X, self.Y, to_plot)
+		cb = ax.pcolormesh(self.X, self.Y, to_plot, vmin=vmin, vmax=vmax)
 		if colorbar:
 			fig.colorbar(cb)
 

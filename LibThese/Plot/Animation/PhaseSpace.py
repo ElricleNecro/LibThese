@@ -9,6 +9,8 @@ class PSPlot(FromHDF5):
 		self._cb = None
 		self._J = args.J
 		self._j_bin = args.j_bin
+		self._vmin = args.vmin
+		self._vmax = args.vmax
 		super(PSPlot, self).__init__(args)
 
 	@property
@@ -50,6 +52,8 @@ class PSPlot(FromHDF5):
 				ax=ax,
 				log=False,
 				#log=True,
+				vmin=self._vmin,
+				vmax=self._vmax,
 		)
 		if self._cb is not None:
 			self._cb.update_normal(cb)
@@ -105,6 +109,16 @@ def create_sub_PSMap(sub):
 		"--j-bin",
 		type=int,
 		help="Number of bins of angular momentum.",
+	)
+	parser.add_argument(
+		"--vmax",
+		type=float,
+		help="Maximum of the colorbar."
+	)
+	parser.add_argument(
+		"--vmin",
+		type=float,
+		help="Minimum of the colorbar."
 	)
 	return parser
 
