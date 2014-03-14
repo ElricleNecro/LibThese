@@ -323,7 +323,13 @@ class PSPlot(PhaseSpaceData):
 		self.hist, self.X, self.Y = np.histogram2d(
 						r,
 						vr,
-						bins=self.nbbin
+						#bins=self.nbbin
+						bins=(
+							self._bins_r,
+							self._bins_v,
+							#10**np.linspace(np.log10(r.min()), np.log10(r.max()), self.nbbin),
+							#np.linspace(vr.min(), vr.max(), self.nbbin),
+						)
 					)
 		self.hist = self.hist.T
 
@@ -348,20 +354,6 @@ class PSPlot(PhaseSpaceData):
 		self.CreateHistogram(r, vr, binJ, dj, j_norm)
 
 	def Plot(self, fig=None, ax=None, log=False, colorbar=False, vmin=None, vmax=None):
-		if ax is None:
-			if fig is None:
-				fig = plt.figure()
-			ax = fig.add_subplot(
-					111,
-					ylim   = (self.v.min(), self.v.max()),
-					xlim   = (self.r.min(), self.r.max()),
-					#ylim   = (-2, 2),
-					#xlim   = (1e-2, 20),
-					xscale = "log",
-			)
-		if ax is not None and fig is None:
-			fig = ax.figure
-
 		if log:
 			to_plot = np.zeros_like(self.hist)
 			tmp     = np.ma.log10(
@@ -373,6 +365,22 @@ class PSPlot(PhaseSpaceData):
 			to_plot[ tmp.nonzero() ] = tmp[ tmp.nonzero() ]
 		else:
 			to_plot = self.hist
+
+		if ax is None:
+			if fig is None:
+				fig = plt.figure()
+			ax = fig.add_subplot(
+					111,
+					ylim   = (self.Y.min(), self.Y.max()),
+					xlim   = (self.X.min(), self.X.max()),
+					#ylim   = (self.v.min(), self.v.max()),
+					#xlim   = (self.r.min(), self.r.max()),
+					#ylim   = (-2, 2),
+					#xlim   = (1e-2, 20),
+					xscale = "log",
+			)
+		if ax is not None and fig is None:
+			fig = ax.figure
 
 		cb = ax.pcolormesh(self.X, self.Y, to_plot, vmin=vmin, vmax=vmax)
 		if colorbar:
