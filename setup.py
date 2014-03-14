@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 # -*- coding:Utf8 -*-
 
 #--------------------------------------------------------------------------------------------------------------
@@ -27,6 +27,7 @@ except ImportError:
 #from setuptools import find_packages
 import setuptools as st
 from distutils.core import setup
+from distutils.command.install_data import install_data
 
 packages = st.find_packages()
 
@@ -39,9 +40,12 @@ setup(
 	description = 'Python Module for analysis gadget simulation.',
 	author      = 'Guillaume Plum',
 	packages    = packages,
+	cmdclass    = {'install_data': install_data},
 	data_files  = [
-		('bin', ['scripts/animationv2.py']),
-		('share/LibThese/animation-plugins', glob.glob("share/LibThese/animation-plugins/*.py")),
+		('share/LibThese/animation-plugins', ["share/LibThese/animation-plugins/__init__.py"]), #glob.glob("share/LibThese/animation-plugins/*.py")),
+	],
+	scripts = [
+		'scripts/animationv2.py'
 	],
 )
 
