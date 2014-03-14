@@ -50,7 +50,7 @@ class Data(object):
 	def get(self, node, sub, *parameter):
 		if len(parameter) == 0:
 			return self._file[node][sub][:]
-		return self._file[node][sub][ :, [self._correspondance[sub](i) for i in parameter] ]
+		return self._file[node][sub].value[ :, [self._correspondance[sub](i) for i in parameter] ]
 
 	def get_densite(self, node, *parameter):
 		return self.get(node, "densite", *parameter)
