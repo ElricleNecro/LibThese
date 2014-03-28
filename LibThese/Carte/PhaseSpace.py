@@ -314,6 +314,8 @@ class PSPlot(PhaseSpaceData):
 		else:
 			self.nbbin = 100
 
+		kwargs["nb_bin"] = self.nbbin
+
 		del kwargs["AxsLog"]
 		del kwargs["nbbin"]
 
