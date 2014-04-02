@@ -7,7 +7,7 @@
 
 
 import numpy         as np
-import pandas.io.sql as psql
+#import pandas.io.sql as psql
 
 ##############################
 #	Exception Definition :
@@ -149,22 +149,22 @@ def Softening(NbPart : int, R : float, percent : float = 0.05):
 	"""
 	return R / (NbPart)**(1./3.) * percent
 
-def LoadDBUsingPandas(filename : str, request : str = "SELECT * FROM densite_log WHERE type=5;", idx : str = "id"):
-	"""Load Data from sqlite3 database using request 'request' and return Pandas.DataFrame object.
-	filename                                            : database name,
-	request = "SELECT * FROM densite_log WHERE type=5;" : request to execute,
-	idx     = "id"                                      : column to use as index (None for the default).
-	"""
-	import sqlite3
+#def LoadDBUsingPandas(filename : str, request : str = "SELECT * FROM densite_log WHERE type=5;", idx : str = "id"):
+	#"""Load Data from sqlite3 database using request 'request' and return Pandas.DataFrame object.
+	#filename                                            : database name,
+	#request = "SELECT * FROM densite_log WHERE type=5;" : request to execute,
+	#idx     = "id"                                      : column to use as index (None for the default).
+	#"""
+	#import sqlite3
 
-	if isinstance(filename, str):
-		wib_conn = sqlite3.connect(filename)
-	else:
-		wib_conn = filename
+	#if isinstance(filename, str):
+		#wib_conn = sqlite3.connect(filename)
+	#else:
+		#wib_conn = filename
 
-	if idx is not None:
-		return psql.read_frame(request, wib_conn).set_index(idx)
-	return psql.read_frame(request, wib_conn)
+	#if idx is not None:
+		#return psql.read_frame(request, wib_conn).set_index(idx)
+	#return psql.read_frame(request, wib_conn)
 
 def OldLoadGadget(filename : str, dtype : int = None):
 	from ..dir.rw		  import File
