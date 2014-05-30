@@ -18,6 +18,9 @@ def king_cmd(args):
     ax.xaxis.set_tick_params(labelsize=args.T_FONT)
     ax.yaxis.set_tick_params(labelsize=args.T_FONT)
 
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+
     ax.set_title("Densité pour le modèle de King", fontsize=args.L_FONT)
     ax.set_xlabel("$x$", fontsize=args.L_FONT)
 
