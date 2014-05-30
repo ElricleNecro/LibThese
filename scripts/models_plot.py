@@ -27,7 +27,7 @@ def king_cmd(args):
     if not args.normalized:
         ax.set_ylabel(r"$\rho^s(x)$", fontsize=args.L_FONT)
     else:
-        ax.set_ylabel(r"$\rho^s(x) / \rho_0$", fontsize=args.L_FONT)
+        ax.set_ylabel(r"$\rho^s(x) / \rho_0^s$", fontsize=args.L_FONT)
 
     for x in args.X:
         print("Doing ", x, "...", end=" ")
