@@ -45,7 +45,8 @@ setup(
 		('share/LibThese/animation-plugins', ["share/LibThese/animation-plugins/__init__.py"]), #glob.glob("share/LibThese/animation-plugins/*.py")),
 	],
 	scripts = [
-		'scripts/animationv2.py'
+		'scripts/animationv2.py',
+		'scripts/models_plot.py',
 	],
 )
 
