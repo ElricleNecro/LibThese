@@ -218,11 +218,11 @@ def king_args(sub, common):
     )
     parser.set_defaults(func=king_cmd)
     parser.add_argument(
-        "W0",
+        "X",
+        metavar="W0",
         help="Main parameter.",
         type=float,
         nargs='+',
-        dest="X",
     )
     parser.add_argument(
         "--normalized",
