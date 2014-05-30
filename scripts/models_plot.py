@@ -10,18 +10,26 @@ from LibThese import Models as m
 
 
 def king_cmd(args):
+    fig = plt.figure(figsize=args.figsize)
+    ax = fig.add_subplot(111)
+
+    plt.setp(ax.xaxis.get_majorticklabels(), rotation=args.XT_ANGLE)
+    plt.setp(ax.yaxis.get_majorticklabels(), rotation=args.YT_ANGLE)
+    ax.xaxis.set_tick_params(labelsize=args.T_FONT)
+    ax.yaxis.set_tick_params(labelsize=args.T_FONT)
+
+    ax.set_title("Densité pour le modèle de King", fontsize=args.L_FONT)
+    ax.set_xlabel("$x$", fontsize=args.L_FONT)
+
+    if not args.normalized:
+        ax.set_ylabel(r"$\rho^s(x)$", fontsize=args.L_FONT)
+    else:
+        ax.set_ylabel(r"$\rho^s(x) / \rho_0$", fontsize=args.L_FONT)
+
     for x in args.X:
         print("Doing ", x, "...", end=" ")
         king = m.ADimKing(x)
         king.Solve()
-
-        fig = plt.figure(figsize=args.figsize)
-        ax = fig.add_subplot(111)
-
-        plt.setp(ax.xaxis.get_majorticklabels(), rotation=args.XT_ANGLE)
-        plt.setp(ax.yaxis.get_majorticklabels(), rotation=args.YT_ANGLE)
-        ax.xaxis.set_tick_params(labelsize=args.T_FONT)
-        ax.yaxis.set_tick_params(labelsize=args.T_FONT)
 
         if not args.normalized:
             ax.plot(
@@ -34,34 +42,27 @@ def king_cmd(args):
                 label=r"$W_0 = %g$" % x
             )
 
-        ax.set_title("$W_0=%g$" % x, fontsize=args.L_FONT)
-        ax.set_xlabel("$x$", fontsize=args.L_FONT)
-
-        if not args.normalized:
-            ax.set_ylabel(r"$\rho^s(x)$", fontsize=args.L_FONT)
-        else:
-            ax.set_ylabel(r"$\rho^s(x) / \rho_0$", fontsize=args.L_FONT)
-
-        if args.legend:
-            ax.legend(loc="best")
-
-        fig.savefig(
-            os.path.join(
-                args.IMG_DIR,
-                args.fname,
-            ) + ".pdf",
-            transparent=True,
-            bbox_inches='tight',
-        )
-        fig.savefig(
-            os.path.join(
-                args.IMG_DIR,
-                args.fname,
-            ) + ".png",
-            transparent=True,
-            bbox_inches='tight',
-        )
         print("Ok!")
+
+    if args.legend:
+        ax.legend(loc="best")
+
+    fig.savefig(
+        os.path.join(
+            args.IMG_DIR,
+            args.fname,
+        ) + ".pdf",
+        transparent=True,
+        bbox_inches='tight',
+    )
+    fig.savefig(
+        os.path.join(
+            args.IMG_DIR,
+            args.fname,
+        ) + ".png",
+        transparent=True,
+        bbox_inches='tight',
+    )
 
 
 def sib_cmd(args):
@@ -221,6 +222,7 @@ def king_args(sub, common):
         help="Main parameter.",
         type=float,
         nargs='+',
+        dest="X",
     )
     parser.add_argument(
         "--normalized",
