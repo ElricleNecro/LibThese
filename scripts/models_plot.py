@@ -6,6 +6,7 @@ import argparse as ap
 import numpy as np
 
 from matplotlib import pyplot as plt
+from matplotlib.ticker import MaxNLocator
 from LibThese import Models as m
 
 
@@ -17,6 +18,11 @@ def king_cmd(args):
     plt.setp(ax.yaxis.get_majorticklabels(), rotation=args.YT_ANGLE)
     ax.xaxis.set_tick_params(labelsize=args.T_FONT)
     ax.yaxis.set_tick_params(labelsize=args.T_FONT)
+
+    if args.x_maxn is not None:
+        ax.xaxis.set_major_locator(MaxNLocator(args.x_maxn))
+    if args.y_maxn is not None:
+        ax.yaxis.set_major_locator(MaxNLocator(args.y_maxn))
 
     ax.set_xscale("log")
     ax.set_yscale("log")
@@ -84,6 +90,11 @@ def sib_cmd(args):
         plt.setp(ax.yaxis.get_majorticklabels(), rotation=args.YT_ANGLE)
         ax.xaxis.set_tick_params(labelsize=args.T_FONT)
         ax.yaxis.set_tick_params(labelsize=args.T_FONT)
+
+        if args.x_maxn is not None:
+            ax.xaxis.set_major_locator(MaxNLocator(args.x_maxn))
+        if args.y_maxn is not None:
+            ax.yaxis.set_major_locator(MaxNLocator(args.y_maxn))
 
         ax.plot(sib.X[:, 0], sib.X[:, 1], "-", label="SIB")
         ax.plot(u, 3.0/(2.0*l) - u/l, "-", label="Droite de Padmanabhan")
@@ -154,6 +165,20 @@ def common_args():
         dest="T_FONT",
     )
     common.add_argument(
+        "--xticks-number",
+        help="Set the maximum number of xticks for the plot.",
+        default=None,
+        type=int,
+        dest="x_maxn",
+    )
+    common.add_argument(
+        "--yticks-number",
+        help="Set the maximum number of yticks for the plot.",
+        default=None,
+        type=int,
+        dest="y_maxn",
+    )
+    common.add_argument(
         "--angle-xticks",
         help="Turn the ticks from an angle.",
         default=0,
@@ -198,11 +223,11 @@ def common_args():
     return common
 
 
-def sib_args(sub, common):
+def sib_args(sub, **def_parser_opt):
     parser = sub.add_parser(
         'sib',
         help="Plot the milne diagramme of the SIB.",
-        parents=common,
+        **def_parser_opt
     )
     parser.set_defaults(func=sib_cmd)
     parser.add_argument(
@@ -213,11 +238,11 @@ def sib_args(sub, common):
     )
 
 
-def king_args(sub, common):
+def king_args(sub, **def_parser_opt):
     parser = sub.add_parser(
         'king',
         help="Plot the density profile of the king Model.",
-        parents=common,
+        **def_parser_opt
     )
     parser.set_defaults(func=king_cmd)
     parser.add_argument(
@@ -250,12 +275,14 @@ if __name__ == '__main__':
 
     sib_args(
         sub,
-        [common],
+        parents=[common],
+        formatter_class=ap.ArgumentDefaultsHelpFormatter,
     )
 
     king_args(
         sub,
-        [common],
+        parents=[common],
+        formatter_class=ap.ArgumentDefaultsHelpFormatter,
     )
 
     args = parser.parse_args()
