@@ -1,8 +1,9 @@
 # -*- coding:Utf8 -*-
 
-import matplotlib.colorbar as cb
+# import matplotlib.colorbar as cb
 import matplotlib.pyplot   as plt
 import matplotlib.cm	   as cm
+import matplotlib.colors   as mc
 import itertools	   as it
 import numpy		   as np
 import numexpr		   as ne
@@ -134,12 +135,11 @@ class Map(Gadget):
 			raise ValueError(name + "not in allowed value: " + [i for i in self._tlist.keys()])
 		return self._data[name]
 
-	@staticmethod
-	def Plot(cls, name, fig=None, ax=None):
+	def Plot(cls, name, fig=None, ax=None, norm=mc.LogNorm(), cmap=cm.gray):
 		h, x, y = cls.Get(name)
-		h, x, y = h.copy(), x.copy(), y.copy()
-		tmp = np.ma.log10(np.ma.masked_where( h <= 0., h))
-		h[ tmp.nonzero() ] = tmp[ tmp.nonzero() ]
+		# h, x, y = h.copy(), x.copy(), y.copy()
+		# tmp = np.ma.log10(np.ma.masked_where( h <= 0., h))
+		# h[ tmp.nonzero() ] = tmp[ tmp.nonzero() ]
 
 		if fig is None and ax is None:
 			fig = plt.figure()
@@ -154,7 +154,7 @@ class Map(Gadget):
 		ax.set_xlim(x.min(), x.max())
 		ax.set_ylim(y.min(), y.max())
 
-		cb = ax.pcolormesh(x, y, h, cmap=cm.gray)
+		cb = ax.pcolormesh(x, y, h, cmap=cmap, norm=norm)
 
 		return fig, ax, cb
 
