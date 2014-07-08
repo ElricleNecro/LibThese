@@ -53,4 +53,4 @@ def smooth(x, window_len=11, window='hanning'):
 
     y = np.convolve(w / w.sum(), s, mode='valid')
     # return y
-    return y[(window_len/2-1):-(window_len/2)]
+    return y[(window_len//2-1):-(window_len//2)]
