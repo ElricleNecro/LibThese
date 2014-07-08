@@ -407,6 +407,12 @@ class PSPlot(PhaseSpaceData):
 
         self.CreateHistogram(r, vr, binJ, dj, j_norm)
 
+    def FilterValue(self, boolean):
+        self.hist = np.ma.masked_where(
+                boolean,
+                self.hist
+        )
+
     def Plot(self, fig=None, ax=None, log=False, colorbar=False, vmin=None, vmax=None, cmap=None):
         if log:
             to_plot = np.zeros_like(self.hist)
