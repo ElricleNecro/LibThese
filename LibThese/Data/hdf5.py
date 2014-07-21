@@ -3,6 +3,14 @@
 import h5py
 import numpy as np
 
+from os.path import basename, splitext
+
+
+__all__ = [
+        "DensiteTable",
+        "TimeTable",
+        "Data",
+]
 
 class DensiteTable(dict):
 
@@ -58,6 +66,7 @@ class Data(object):
     ):
         self._file = h5py.File(file, status)
         self._correspondance = corres
+        self._name = file
 
     def get(self, node, sub, *parameter):
         if len(parameter) == 0:
@@ -80,6 +89,18 @@ class Data(object):
 
     def get_fof(self, node):
         return self._file[node]["ids"][:]
+
+    @property
+    def file(self):
+        return self._file
+
+    @property
+    def name(self):
+        return splitext( basename( self._name ) )[0]
+
+    @property
+    def filename(self):
+        return self._name
 
     def __del__(self):
         self._file.close()
