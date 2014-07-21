@@ -141,6 +141,8 @@ class Map(Gadget):
         # tmp = np.ma.log10(np.ma.masked_where( h <= 0., h))
         # h[ tmp.nonzero() ] = tmp[ tmp.nonzero() ]
 
+        h = np.ma.masked_where( h<=0, h )
+
         if fig is None and ax is None:
             fig = plt.figure()
             ax  = fig.add_subplot(111)
