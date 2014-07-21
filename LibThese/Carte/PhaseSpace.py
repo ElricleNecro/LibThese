@@ -84,6 +84,7 @@ class PhaseSpaceData(Filter):
             edge_r=None,
             edge_v=None,
             edge_j=None,
+            select_ids=None,
     ):
         super(Filter, self).__init__(file)
         if format == 1:
@@ -99,6 +100,12 @@ class PhaseSpaceData(Filter):
             self.Part.Translate(move_pos)
         if move_vel is not None:
             self.Part.AddVelocity(move_vel)
+
+        self.Part.SortById()
+        if select_ids is not None:
+            self._ids = np.array(select_ids) - 1
+        else:
+            self._ids = None
 
         if AngularBins is not None:
             try:
@@ -148,9 +155,14 @@ class PhaseSpaceData(Filter):
         ############
         # Calculs des quantités physiques voulues pour l'espace des phase :
         ###################################################################
-        self._r     = self.get_r(self.Part.NumpyPositions)
-        self._v     = self.get_rv(self.Part.NumpyPositions, self.Part.NumpyVelocities) / self._r
-        self._j     = self.get_j(self.Part.NumpyPositions, self.Part.NumpyVelocities)
+        if self._ids is not None:
+            self._r     = self.get_r(self.Part.NumpyPositions[self._ids, :])
+            self._v     = self.get_rv(self.Part.NumpyPositions[self._ids, :], self.Part.NumpyVelocities[self._ids, :]) / self._r
+            self._j     = self.get_j(self.Part.NumpyPositions[self._ids, :], self.Part.NumpyVelocities[self._ids, :])
+        else:
+            self._r     = self.get_r(self.Part.NumpyPositions)
+            self._v     = self.get_rv(self.Part.NumpyPositions, self.Part.NumpyVelocities) / self._r
+            self._j     = self.get_j(self.Part.NumpyPositions, self.Part.NumpyVelocities)
 
         if r_min is None:
             r_min = self.r.min()
