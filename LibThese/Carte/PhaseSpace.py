@@ -409,7 +409,7 @@ class PSPlot(PhaseSpaceData):
                             # #np.linspace(vr.min(), vr.max(), self.nbbin),
                         # )
                     )
-        self.hist = self.hist.T / self.m
+        self.hist = self.hist.T * self.m
 
         if j_norm and j is not None:
             l_dj = 2.0 * np.pi * j * dj
