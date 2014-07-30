@@ -383,10 +383,10 @@ class PSPlot(PhaseSpaceData):
     @property
     def m(self):
         return self._m
-    @mass.setter
+    @m.setter
     def m(self, v):
         self._m = v
-    @mass.deleter
+    @m.deleter
     def m(self):
         self._m = self.mass[-1]
 
