@@ -342,6 +342,8 @@ class PSPlot(PhaseSpaceData):
 
         super(PSPlot, self).__init__(file, **kwargs)
 
+        self._m = self.mass[-1]
+
         if self.AxsLog:
             if "r_max" in kwargs and kwargs["r_max"]:
                 r_max = kwargs["r_max"]
@@ -378,6 +380,16 @@ class PSPlot(PhaseSpaceData):
             #self.axs.set_xscale("log")
 
 
+    @property
+    def m(self):
+        return self._m
+    @mass.setter
+    def m(self, v):
+        self._m = v
+    @mass.deleter
+    def m(self):
+        self._m = self.mass[-1]
+
     def CreateHistogram(self, r, vr, j, dj, j_norm=False):
         self.hist, self.X, self.Y = np.histogram2d(
                         r,
@@ -397,7 +409,7 @@ class PSPlot(PhaseSpaceData):
                             # #np.linspace(vr.min(), vr.max(), self.nbbin),
                         # )
                     )
-        self.hist = self.hist.T
+        self.hist = self.hist.T / self.m
 
         if j_norm and j is not None:
             l_dj = 2.0 * np.pi * j * dj
@@ -405,8 +417,9 @@ class PSPlot(PhaseSpaceData):
         for i in range( len( self.hist ) ):
             self.hist[i, :] = self.hist[i, :] / (self.Y[i+1] - self.Y[i])
             self.hist[:, i] = self.hist[:, i] / (4./3.*np.pi * (self.X[i+1]**3 - self.X[i]**3))
+            self.hist[:, i] = self.hist[:, i] * self.X[i]**2
             if j_norm and j is not None:
-                self.hist[:, i] = self.hist[:, i] / ( l_dj ) * self.X[i]**2
+                self.hist[:, i] = self.hist[:, i] / ( l_dj ) # * self.X[i]**2
 
     def GetSliceJ(self, binJ=None):
         if binJ is None:
