@@ -22,7 +22,7 @@ def king_temp_cmd(args):
     ax.set_xscale("log")
     ax.set_yscale("log")
 
-    ax.set_title(r"Fonction $\zeta$", fontsize=args.L_FONT)
+    # ax.set_title(r"Fonction $\zeta$", fontsize=args.L_FONT)
     ax.set_xlabel("$x$", fontsize=args.L_FONT)
 
     if args.normalized:
@@ -41,7 +41,7 @@ def king_temp_cmd(args):
     ax2.set_xscale("log")
     ax2.set_yscale("log")
 
-    ax2.set_title("Température pour le modèle de King", fontsize=args.L_FONT)
+    # ax2.set_title("Température pour le modèle de King", fontsize=args.L_FONT)
     ax2.set_xlabel("$x$", fontsize=args.L_FONT)
 
     if args.normalized:
