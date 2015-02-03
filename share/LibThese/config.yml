@@ -1,0 +1,35 @@
+tmin: 20
+tmax: 50
+
+window: 5
+
+y_maxn: 4
+
+v_min: 5
+
+snapshots:
+        - None_000
+        - None_100
+        - None_200
+        - None_300
+
+plot:
+        colors:
+                - b
+                - g
+                - r
+                - k
+
+        symbols:
+                - "-o"
+                - "-+"
+                - "-"
+                - "-."
+                - "--"
+                - ":"
+                - "-,"
+
+interpolation:
+        method: interp1d
+        kwargs:
+                kind: linear
