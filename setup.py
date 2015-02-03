@@ -47,6 +47,8 @@ setup(
 	scripts = [
 		'scripts/animationv2.py',
 		'scripts/models_plot.py',
+		'scripts/roi.py',
+		'scripts/verif_python.py',
 	],
 )
 
