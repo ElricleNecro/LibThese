@@ -154,7 +154,7 @@ def createinterpolation(config, data, *args, **kwargs):
 
     return tuple(func)
 
-def cleanedTime(td, tr, name, filter):
+def cleanedTime(td, tr, name, config, filter):
     T_carac_filter = (
         filter.dataFilter(
             td,
@@ -190,15 +190,17 @@ def cleanedTime(td, tr, name, filter):
     print(T_d_n[:, 0].min(), T_d_n[:, 0].max())
 
     return (
-        createInterpolation(
+        createinterpolation(
+            config,
             T_d_n,
         )[0],
-        createInterpolation(
+        createinterpolation(
+            config,
             T_r_n,
         )[0]
     )
 
-def calculateTime(data):
+def calculateTime(config, data):
     T_d = np.array(
         [0.]*(2*len(data._file)),
         dtype=np.float64
@@ -218,7 +220,8 @@ def calculateTime(data):
         m = data.get(t, "masse")
         time = data.get_time(t, "time")
         N = data.get(t, "ids").shape[0]
-        rho, = createInterpolation(
+        rho, = createinterpolation(
+            config,
             data.get(
                 t,
                 "densite_log"
@@ -231,6 +234,27 @@ def calculateTime(data):
         T_rel[i, 1] = N * m1 / (4*np.pi**2. * radius[i, 2]**3. * rho(radius[i, 2]) * np.log(radius[i, 2] / 0.001)) * T_d[i, 1]
 
     return T_d, T_rel
+
+def plot_densite(rho, name):
+    f = plt.figure(figsize=(4, 2.8))
+    a = f.add_subplot(111, xscale="log", yscale="log", ylim=(1e-4, 10), xlim=(1e-2, 1e1), xlabel=r"$r$", ylabel=r"$\rho(r)$")
+    for r in rho:
+        a.plot(r[:, 0], r[:, 1], "-")
+
+    f.savefig(
+        "ROI_densite_" + splitext(name)[0] + ".png",
+        transparent=True,
+        bbox_inches="tight",
+        format="png"
+    )
+    f.savefig(
+        "ROI_densite_" +
+        splitext(name)[0] +
+        ".pdf",
+        transparent=True,
+        bbox_inches="tight",
+        format="pdf"
+    )
 
 def plot_roi(config, t, T_carac_JP, r1, r2, r3, a_1, a_2, ani, f_b, name):
     f = plt.figure(figsize=(4, 2.8))
@@ -398,23 +422,31 @@ def main():
     config = load(args.config)
 
     data = h.Data(args.hdf5)
+
+    rho = list()
+    for snap in config["snapshots"]:
+        rho.append(
+            data.get(snap, "densite_log")
+        )
+
     filtre = Filter(**load(args.filter))
-    Td, Tr = calculateTime(data)
+    Td, Tr = calculateTime(config, data)
     Td, Tr = cleanedTime(
         Td,
         Tr,
         basename(args.hdf5),
+        config,
         filtre
     )
 
     try:
         data_aniso = createinterpolation(
-            args.config,
+            config,
             filtre.dataFilter(
                 np.loadtxt(args.aniso),
                 basename(args.hdf5),
             )
-        )
+        )[0]
     except FileNotFoundError:
         raise FileNotFoundError("As Anisotropy inside hdf5 is deprecated, you need the external file given by verif_python.py.")
 
@@ -428,8 +460,13 @@ def main():
         "r90"
     )
     rad = filtre.dataFilter(rad, basename(args.hdf5))
-    a_1, a_2, ani, r1, r2, r3 = createinterpolation(args.config, rad)
+    a_1, a_2, ani, r1, r2, r3 = createinterpolation(config, rad)
     t = np.linspace(rad[0, 0], rad[-1, 0], 200)
+
+    plot_densite(
+        rho,
+        basename(args.hdf5)
+    )
 
     plot_roi(
         config,
