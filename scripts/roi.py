@@ -6,7 +6,7 @@
 
 
 import argparse as ap
-import os
+import os, sys
 
 import matplotlib
 import numpy as np
@@ -28,7 +28,8 @@ from os.path import basename, splitext
 from yaml import load
 
 
-PREFIX = os.path.dirname(__file__)
+PREFIX = os.path.dirname(sys.argv[0])
+# PREFIX = os.path.dirname(__file__)
 CONFIG_DIR = os.path.abspath(
     os.path.join(
         PREFIX,
