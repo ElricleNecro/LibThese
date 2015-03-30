@@ -15,12 +15,12 @@ matplotlib.rcParams['figure.figsize'] = (3., 1.8)
 matplotlib.rcParams['axes.grid'] = True
 
 from matplotlib.ticker import MaxNLocator
-from matplotlib import cm
+# from matplotlib import cm
 from matplotlib import pyplot as plt
 
 from scipy.interpolate import interp1d, Rbf, InterpolatedUnivariateSpline
 
-from LibThese import Carte as c
+# from LibThese import Carte as c
 from LibThese import Data as h
 
 from os.path import basename, splitext
@@ -236,9 +236,17 @@ def calculateTime(config, data):
 
     return T_d, T_rel
 
-def plot_densite(rho, name):
+def plot_densite(rho, name, ylim=(1e-4, 10), xlim=(1e-2, 1e1)):
     f = plt.figure(figsize=(4, 2.8))
-    a = f.add_subplot(111, xscale="log", yscale="log", ylim=(1e-4, 10), xlim=(1e-2, 1e1), xlabel=r"$r$", ylabel=r"$\rho(r)$")
+    a = f.add_subplot(
+        111,
+        xscale="log",
+        yscale="log",
+        ylim=ylim,
+        xlim=xlim,
+        xlabel=r"$r$",
+        ylabel=r"$\rho(r)$"
+    )
     for r in rho:
         a.plot(r[:, 0], r[:, 1], "-")
 
@@ -281,7 +289,13 @@ def plot_roi(config, t, T_carac_JP, r1, r2, r3, a_1, a_2, ani, f_b, name):
         bbox_inches="tight",
         format="pdf"
     )
-    f, a = plt.subplots(2, 1, sharex=True, squeeze=True, figsize=(4, 3.8))
+    f, a = plt.subplots(
+        2,
+        1,
+        sharex=True,
+        squeeze=True,
+        figsize=(4, 3.8)
+    )
     f.subplots_adjust(hspace=0.0, wspace=0.0)
     # axial = s.get_all_time("time", "s_ratio", "g_ratio", "Anisotropy")
     # axial = DataFilter(axial, filter_list[s.name])
@@ -296,10 +310,19 @@ def plot_roi(config, t, T_carac_JP, r1, r2, r3, a_1, a_2, ani, f_b, name):
     )
     a[0].yaxis.set_major_locator(MaxNLocator(config["y_maxn"], prune="lower"))
     a[0].set_ylabel(r"$a_1$, $a_2$")
+    if "ax_ylim" in config["roi_plot"]:
+        a[0].set_ylim(config["roi_plot"]["ax_ylim"])
+    if "ax_xlim" in config["roi_plot"]:
+        a[0].set_xlim(config["roi_plot"]["ax_xlim"])
+
     a[1].plot(T_carac_JP[0](t), f_b(t), "-")
     a[1].yaxis.set_major_locator(MaxNLocator(config["y_maxn"], prune="upper"))
     a[1].set_ylabel(r"$\beta$")
     a[1].set_xlabel(r"$t'$")
+    if "b_ylim" in config["roi_plot"]:
+        a[0].set_ylim(config["roi_plot"]["b_ylim"])
+    if "b_xlim" in config["roi_plot"]:
+        a[0].set_xlim(config["roi_plot"]["b_xlim"])
 
     f.savefig(
         "ROI_" + splitext(name)[0] + ".png",
@@ -466,7 +489,8 @@ def main():
 
     plot_densite(
         rho,
-        basename(args.hdf5)
+        basename(args.hdf5),
+        **config["density_plot"]
     )
 
     plot_roi(

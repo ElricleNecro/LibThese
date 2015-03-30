@@ -33,3 +33,9 @@ interpolation:
         method: interp1d
         kwargs:
                 kind: linear
+
+density_plot:
+        ylim: [!!float "1e-4", !!float "1e1"]
+        xlim: [!!float "1e-2", !!float "1e1"]
+roi_plot:
+        ax_ylim: [!!float "0.5", !!float "1.5"]
