@@ -102,5 +102,5 @@ class Data(object):
     def filename(self):
         return self._name
 
-    def __del__(self):
-        self._file.close()
+    # def __del__(self):
+        # self._file.close()
