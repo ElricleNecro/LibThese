@@ -24,6 +24,11 @@ except ImportError:
     print("You really need matplotlib")
     sys.exit(-1)
 
+try:
+	import commands
+except:
+	import subprocess as commands
+
 #from setuptools import find_packages
 import setuptools as st
 from distutils.core import setup
@@ -49,7 +54,7 @@ def scandir(dir, files=[]):
             files.append(path.replace(os.path.sep, ".")[:-4])
         elif os.path.isdir(path):
             scandir(path, files)
-            return files
+    return files
 
 def makeExtension(extName, test=False, **kwargs):
     """
@@ -133,37 +138,52 @@ extNames = scandir("LibThese")
 #extensions = [makeExtension(name, include_dirs = [ "include/" ]) for name in extNames]
 extensions = []
 for name in extNames:
-    extensions.append(
-        makeExtension(
-            name,
-            cython_directives={
-                "embedsignature": True,
-            }
-        )
-    )
-    #  if "Gadget" in name or "Types" in name or "Tree" in name:
-        #  opt = pkgconfig("iogadget")
-        #  if "include_dirs" in opt:
-            #  opt["include_dirs"] += [ "include/" ]
-        #  else:
-            #  opt["include_dirs"]  = [ "include/" ]
-            #  opt["include_dirs"] += [ np.get_include() ]
-            #  opt["cython_directives"] = {
-                #  "embedsignature" : True,
+    #  extensions.append(
+        #  makeExtension(
+            #  name,
+            #  cython_directives={
+                #  "embedsignature": True,
                 #  "language_level" : 3
             #  }
-            #  extensions.append( makeExtension(name, **opt) )
-    #  else:
-        #  extensions.append(
-            #  makeExtension(
-                #  name,
-                #  include_dirs = [ "include/" ],
-                #  cython_directives = {
-                    #  "embedsignature" : True,
-                    #  "language_level" : 3
-                #  }
-            #  )
         #  )
+    #  )
+    if "Generation" in name:
+        opt = pkgconfig("king")
+        opt["cython_include_dirs"] = [ King.get_include() ]
+        if "include_dirs" in opt:
+            opt["include_dirs"] += [ "include/" ]
+        else:
+            opt["include_dirs"]  = [ "include/" ]
+            opt["include_dirs"] += [ np.get_include() ]
+            opt["cython_include_dirs"] = [ King.get_include() ]
+            opt["cython_directives"] = {
+                "embedsignature" : True,
+                "language_level" : 3
+            }
+        extensions.append( makeExtension(name, **opt) )
+    elif "Gadget" in name or "Types" in name or "Tree" in name:
+        opt = pkgconfig("iogadget")
+        if "include_dirs" in opt:
+            opt["include_dirs"] += [ "include/" ]
+        else:
+            opt["include_dirs"]  = [ "include/" ]
+            opt["include_dirs"] += [ np.get_include() ]
+            opt["cython_directives"] = {
+                "embedsignature" : True,
+                "language_level" : 3
+            }
+        extensions.append( makeExtension(name, **opt) )
+    else:
+        extensions.append(
+            makeExtension(
+                name,
+                include_dirs = [ "include/" ],
+                cython_directives = {
+                    "embedsignature" : True,
+                    "language_level" : 3
+                }
+            )
+        )
 
 print(extensions, extNames, sep='\n')
 
@@ -172,6 +192,7 @@ print(extensions, extNames, sep='\n')
 #--------------------------------------------------------------------------------------------------------------
 #  packages = [ 'LibThese', 'LibThese.Carte', 'LibThese.Data', 'LibThese.dir', 'LibThese.Gadget', 'LibThese.Models', 'LibThese.Physics', 'LibThese.Plot', 'LibThese.Pretty', 'LibThese.Utils' ]
 packages = st.find_packages()
+print(packages)
 
 #--------------------------------------------------------------------------------------------------------------
 # Call the setup function:
@@ -182,7 +203,10 @@ setup(
     description = 'Python Module for analysis gadget simulation.',
     author      = 'Guillaume Plum',
     packages    = packages,
-    cmdclass    = {'install_data': install_data, 'build_ext': build_ext},
+    cmdclass    = {
+        'install_data': install_data,
+        'build_ext': build_ext
+    },
     data_files  = [
         ('share/LibThese/animation-plugins', ["share/LibThese/animation-plugins/__init__.py"]), #glob.glob("share/LibThese/animation-plugins/*.py")),
         ('share/LibThese/', ["share/LibThese/config.yml", "share/LibThese/filter.yml"]), #glob.glob("share/LibThese/animation-plugins/*.py")),
