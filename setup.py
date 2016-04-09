@@ -149,13 +149,11 @@ for name in extNames:
     #  )
     if "Generation" in name:
         opt = pkgconfig("king")
-        opt["cython_include_dirs"] = [ King.get_include() ]
         if "include_dirs" in opt:
             opt["include_dirs"] += [ "include/" ]
         else:
             opt["include_dirs"]  = [ "include/" ]
             opt["include_dirs"] += [ np.get_include() ]
-            opt["cython_include_dirs"] = [ King.get_include() ]
             opt["cython_directives"] = {
                 "embedsignature" : True,
                 "language_level" : 3
