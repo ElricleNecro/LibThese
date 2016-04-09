@@ -4,8 +4,8 @@ import numpy as np
 cimport cython
 cimport Gadget as g
 
-import  InitialCond.Types as Types
-cimport InitialCond.Types as Types
+import  LibThese.Gadget.Types as Types
+cimport LibThese.Gadget.Types as Types
 
 from libc.stdlib cimport free
 
@@ -117,7 +117,7 @@ The only gadget file format supported is the gadget 1.
 	cpdef int _write_format1(self):
 		cdef int res
 		cdef unsigned int i
-		cdef char *fname = <bytes>self.filename.encode()
+		cdef char *fname = self.filename
 		if self.part.ptr_data == NULL:
 			raise MemoryError("Particules array not allocate.")
 		for i in range(6):
@@ -128,7 +128,7 @@ The only gadget file format supported is the gadget 1.
 	cpdef int _write_format2(self):
 		cdef int res
 		cdef unsigned int i
-		cdef char *fname = <bytes>self.filename.encode()
+		cdef char *fname = self.filename
 		if self.part.ptr_data == NULL:
 			raise MemoryError("Particules array not allocate.")
 		for i in range(6):
@@ -146,7 +146,7 @@ The only gadget file format supported is the gadget 1.
 		"""
 		cdef int N = 0
 		cdef unsigned int i
-		cdef char *fname = <bytes>self.filename.encode()
+		cdef char *fname = self.filename
 		cdef Types.Particule_d part
 
 		part = g.Double_Gadget_Read_format1(fname, &self.header, num_files, bpot, bacc, bdadt, bdt)
@@ -161,7 +161,7 @@ The only gadget file format supported is the gadget 1.
 	cpdef _read_format2(self, int num_files, bint bpot=0, bint bacc=0, bint bdadt=0, bint bdt=0):
 		cdef int N = 0
 		cdef unsigned int i
-		cdef char *fname = <bytes>self.filename.encode()
+		cdef char *fname = self.filename
 		cdef Types.Particule_d part
 
 		part = g.Double_Gadget_Read_format2(fname, &self.header, num_files, bpot, bacc, bdadt, bdt)

@@ -1,4 +1,4 @@
-cimport InitialCond.Types as Types
+cimport LibThese.Gadget.Types as Types
 
 cdef extern from "IOGadget/gadget.h":
 	cdef struct io_header:
