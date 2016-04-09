@@ -5,3 +5,5 @@ dist/
 doc/build/
 Divers/*
 __pycache__
+LibThese/Gadget/Gadget.c
+LibThese/Gadget/Types.c
