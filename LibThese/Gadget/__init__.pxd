@@ -1,3 +1,3 @@
-import  InitialCond.Types as Types
-cimport InitialCond.Types as Types
+import  LibThese.Gadget.Types as Types
+cimport LibThese.Gadget.Types as Types
 
