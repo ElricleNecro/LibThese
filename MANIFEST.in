@@ -1,2 +1,2 @@
 recursive-include share *.py
-recursive-include scripts animationv2.py
+recursive-include scripts *.py
