@@ -7,3 +7,6 @@ Divers/*
 __pycache__
 LibThese/Gadget/Gadget.c
 LibThese/Gadget/Types.c
+LibThese/Generation/Generation.c
+LibThese/Generation/King.c
+LibThese/Tree/Tree.c
