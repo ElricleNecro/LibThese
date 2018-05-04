@@ -7,10 +7,12 @@
 
 import argparse as ap
 import os
+import sys
 
 import matplotlib
 import numpy as np
 
+matplotlib.use('agg')
 matplotlib.rcParams['figure.figsize'] = (3., 1.8)
 matplotlib.rcParams['axes.grid'] = True
 
@@ -40,6 +42,7 @@ interp_method = {
     Rbf.__name__ : Rbf,
     InterpolatedUnivariateSpline.__name__ : InterpolatedUnivariateSpline,
 }
+ParticuleNumber = 30000
 
 
 class Filter(object):
@@ -217,9 +220,13 @@ def calculateTime(config, data):
     )
 
     for i, t in enumerate(data._file):
+        print("working on", t, file=sys.stderr)
         m = data.get(t, "masse")
         time = data.get_time(t, "time")
-        N = data.get(t, "ids").shape[0]
+        try:
+            N = data.get(t, "ids").shape[0]
+        except:
+            N = ParticuleNumber
         rho, = createinterpolation(
             config,
             data.get(
@@ -411,6 +418,14 @@ def parse_args():
         default="Data/aniso.dat",
         help="Corrected anisotropie."
     )
+    parser.add_argument(
+        "-n",
+        "--particule-number",
+        type=int,
+        dest="N",
+        default=30000,
+        help="Number of particle in the simulation."
+    )
 
     return parser.parse_args()
 
@@ -418,6 +433,7 @@ def main():
     """Main program
     """
     args = parse_args()
+    ParticuleNumber = args.N
 
     config = load(args.config)
 
