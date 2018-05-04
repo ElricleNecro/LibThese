@@ -43,6 +43,7 @@ setup(
 	cmdclass    = {'install_data': install_data},
 	data_files  = [
 		('share/LibThese/animation-plugins', ["share/LibThese/animation-plugins/__init__.py"]), #glob.glob("share/LibThese/animation-plugins/*.py")),
+		('share/LibThese/', ["share/LibThese/config.yml", "share/LibThese/filter.yml"]), #glob.glob("share/LibThese/animation-plugins/*.py")),
 	],
 	scripts = [
 		'scripts/animationv2.py',
